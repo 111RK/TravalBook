@@ -228,32 +228,28 @@ function renderSwipe() {
   }
   const p = SWIPE_PLACES[swIdx];
   document.getElementById('swipe-count').textContent = `${swIdx + 1} / ${SWIPE_PLACES.length}`;
-  z.innerHTML = `<div class="sw-card" id="sw-cur">
-    <div class="sw-img" style="background-image:url('${p.img}')"><div class="sw-dur">${p.duration}</div></div>
-    <div class="sw-body"><div class="sw-name">${p.name}</div><div class="sw-addr">${p.address}</div>
-    <div><span class="sw-stars">${'\u2605'.repeat(Math.round(p.rating))}</span> <span class="sw-rating">${p.rating} (${p.reviews.toLocaleString()})</span></div></div></div>`;
+  z.innerHTML = `
+    <div class="sw-card">
+      <div class="sw-img" style="background-image:url('${p.img}')"><div class="sw-dur">${p.duration}</div></div>
+      <div class="sw-body">
+        <div class="sw-name">${p.name}</div>
+        <div class="sw-addr">${p.address}</div>
+        <div><span class="sw-stars">${'*'.repeat(Math.round(p.rating))}</span> <span class="sw-rating">${p.rating} (${p.reviews.toLocaleString()})</span></div>
+      </div>
+    </div>`;
 }
 
-let swiping = false;
 function swipeAction(d) {
-  if (swiping) return;
-  const c = document.getElementById('sw-cur');
-  if (!c) return;
-  swiping = true;
-  c.classList.add(d === 'left' ? 'out-l' : 'out-r');
-  setTimeout(() => {
-    swIdx++;
-    swiping = false;
-    renderSwipe();
-  }, 450);
+  swIdx++;
+  renderSwipe();
 }
 
 let tx = 0;
 document.addEventListener('touchstart', e => { if (cur === 'screen-swipe') tx = e.touches[0].clientX; });
 document.addEventListener('touchend', e => {
   if (cur !== 'screen-swipe') return;
-  const d = e.changedTouches[0].clientX - tx;
-  if (Math.abs(d) > 60) swipeAction(d > 0 ? 'right' : 'left');
+  const diff = e.changedTouches[0].clientX - tx;
+  if (Math.abs(diff) > 60) swipeAction(diff > 0 ? 'right' : 'left');
 });
 
 // Step 5 — Generating animation
