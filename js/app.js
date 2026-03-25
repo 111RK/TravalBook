@@ -163,12 +163,36 @@ function openVoyage(id) {
     </div>
   `;
 
-  // Chapters with real images
-  document.getElementById('carnet-chapters').innerHTML = v.chapters.map(ch => `
+  // Chapters with photos
+  document.getElementById('carnet-chapters').innerHTML = v.chapters.map((ch, ci) => {
+    const selectedPhotos = ch.photos ? ch.photos.filter(p => p.selected) : [];
+    const heroImg = selectedPhotos.length > 0 ? selectedPhotos[0].url : '';
+    const totalPhotos = ch.photos ? ch.photos.length : 0;
+    const selectedCount = selectedPhotos.length;
+
+    return `
     <div class="chapter-card">
       <div class="chapter-day">${ch.day}</div>
       <div class="chapter-title">${ch.title}</div>
-      ${ch.img ? `<div class="chapter-img" style="background-image:url('${ch.img}')"></div>` : ''}
+      ${heroImg ? `<div class="chapter-img" style="background-image:url('${heroImg}')" onclick="viewPhoto('${heroImg}')"></div>` : ''}
+      ${ch.photos && ch.photos.length > 0 ? `
+      <div class="chapter-photos">
+        ${ch.photos.map((p, pi) => `
+          <div class="chapter-thumb ${p.selected ? 'selected' : ''}"
+               style="background-image:url('${p.url}')"
+               onclick="toggleChapterPhoto(${v.id}, ${ci}, ${pi})">
+            <div class="chapter-thumb-check">\u2713</div>
+          </div>
+        `).join('')}
+        <div class="chapter-thumb-add" onclick="openGallery(${v.id}, ${ci})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Ajouter
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin:-8px 0 12px;cursor:pointer" onclick="openGallery(${v.id}, ${ci})">
+        ${selectedCount}/${totalPhotos} photos s\u00e9lectionn\u00e9es \u2014 <span style="color:var(--primary)">G\u00e9rer</span>
+      </div>
+      ` : ''}
       <div class="chapter-text">${ch.text}</div>
       <div class="chapter-place">
         <div class="chapter-place-info">
@@ -178,7 +202,8 @@ function openVoyage(id) {
         <div class="chapter-place-rating">${'\u2605'.repeat(Math.round(ch.place.rating))} ${ch.place.rating}</div>
       </div>
     </div>
-  `).join('');
+    `;
+  }).join('');
 
   // PDF info
   document.getElementById('pdf-title').textContent = v.name;
@@ -475,6 +500,113 @@ function geoToPath(geometry, projX, projY) {
     geometry.coordinates.forEach(poly => paths.push(poly.map(ringToPath).join('')));
   }
   return paths;
+}
+
+// ============================================
+// Photo Gallery & Selection
+// ============================================
+
+function toggleChapterPhoto(voyageId, chapterIdx, photoIdx) {
+  const v = VOYAGES.find(x => x.id === voyageId);
+  if (!v) return;
+  const photo = v.chapters[chapterIdx].photos[photoIdx];
+  photo.selected = !photo.selected;
+  openVoyage(voyageId); // re-render
+}
+
+function openGallery(voyageId, chapterIdx) {
+  const v = VOYAGES.find(x => x.id === voyageId);
+  if (!v) return;
+  const ch = v.chapters[chapterIdx];
+
+  let overlay = document.querySelector('.gallery-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.className = 'gallery-overlay';
+    document.getElementById('app-content').appendChild(overlay);
+  }
+
+  const selectedCount = ch.photos.filter(p => p.selected).length;
+
+  overlay.innerHTML = `
+    <div class="gallery-header">
+      <div>
+        <div class="gallery-title">${ch.day} \u2014 Photos</div>
+        <div class="gallery-subtitle">${selectedCount} s\u00e9lectionn\u00e9es sur ${ch.photos.length}</div>
+      </div>
+      <button class="gallery-done" onclick="closeGallery(${voyageId})">OK</button>
+    </div>
+    <div class="gallery-grid">
+      ${ch.photos.map((p, pi) => `
+        <div class="gallery-photo ${p.selected ? 'selected' : ''}"
+             style="background-image:url('${p.url}')"
+             onclick="toggleGalleryPhoto(${voyageId}, ${chapterIdx}, ${pi})">
+          <div class="gallery-photo-check">${p.selected ? '\u2713' : ''}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="gallery-add-row">
+      <button class="gallery-add-btn" onclick="addPhotoToChapter(${voyageId}, ${chapterIdx})">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+        Importer des photos
+      </button>
+    </div>
+  `;
+
+  requestAnimationFrame(() => overlay.classList.add('show'));
+}
+
+function toggleGalleryPhoto(voyageId, chapterIdx, photoIdx) {
+  const v = VOYAGES.find(x => x.id === voyageId);
+  if (!v) return;
+  v.chapters[chapterIdx].photos[photoIdx].selected = !v.chapters[chapterIdx].photos[photoIdx].selected;
+  openGallery(voyageId, chapterIdx); // re-render gallery
+}
+
+function closeGallery(voyageId) {
+  const overlay = document.querySelector('.gallery-overlay');
+  if (overlay) overlay.classList.remove('show');
+  setTimeout(() => openVoyage(voyageId), 300);
+}
+
+function addPhotoToChapter(voyageId, chapterIdx) {
+  // In a real app, this opens the device file picker
+  // For demo, simulate adding a photo
+  const v = VOYAGES.find(x => x.id === voyageId);
+  if (!v) return;
+
+  // Create hidden file input
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.multiple = true;
+  input.onchange = (e) => {
+    const files = Array.from(e.target.files);
+    files.forEach(file => {
+      const url = URL.createObjectURL(file);
+      v.chapters[chapterIdx].photos.push({ url, selected: true });
+    });
+    if (files.length > 0) {
+      showToast(`${files.length} photo${files.length > 1 ? 's' : ''} ajout\u00e9e${files.length > 1 ? 's' : ''} !`);
+      openGallery(voyageId, chapterIdx);
+    }
+  };
+  input.click();
+}
+
+function viewPhoto(url) {
+  let viewer = document.querySelector('.photo-viewer');
+  if (!viewer) {
+    viewer = document.createElement('div');
+    viewer.className = 'photo-viewer';
+    viewer.onclick = () => viewer.classList.remove('show');
+    document.getElementById('app-content').appendChild(viewer);
+  }
+  viewer.innerHTML = `
+    <button class="photo-viewer-close" onclick="event.stopPropagation();this.parentElement.classList.remove('show')">\u2715</button>
+    <img src="${url}" alt="Photo">
+  `;
+  requestAnimationFrame(() => viewer.classList.add('show'));
 }
 
 // ============================================

@@ -1699,3 +1699,263 @@ html, body {
   justify-content: center;
   box-shadow: 0 4px 12px rgba(198, 125, 74, 0.25);
 }
+
+/* ============================================
+   Chapter Photos (thumbnails row)
+   ============================================ */
+
+.chapter-photos {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0 14px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chapter-photos::-webkit-scrollbar { display: none; }
+
+.chapter-thumb {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-xs);
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  position: relative;
+  border: 2px solid transparent;
+  transition: border-color 0.2s, opacity 0.2s;
+  box-shadow: var(--card-shadow);
+}
+
+.chapter-thumb.selected {
+  border-color: var(--primary);
+}
+
+.chapter-thumb:not(.selected) {
+  opacity: 0.45;
+}
+
+.chapter-thumb-check {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.chapter-thumb.selected .chapter-thumb-check {
+  opacity: 1;
+}
+
+.chapter-thumb-add {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-xs);
+  border: 2px dashed var(--card-border);
+  background: var(--bg3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 10px;
+  gap: 2px;
+  transition: border-color 0.2s;
+}
+
+.chapter-thumb-add:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.chapter-thumb-add svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ============================================
+   Gallery Overlay (fullscreen photo picker)
+   ============================================ */
+
+.gallery-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(100%);
+  transition: opacity 0.3s, transform 0.3s ease;
+}
+
+.gallery-overlay.show {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
+}
+
+.gallery-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  min-height: 48px;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.gallery-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.gallery-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.gallery-done {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 8px 12px;
+}
+
+.gallery-grid {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  align-content: start;
+}
+
+.gallery-photo {
+  aspect-ratio: 1;
+  border-radius: var(--radius-xs);
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  position: relative;
+  transition: opacity 0.2s;
+}
+
+.gallery-photo:not(.selected) {
+  opacity: 0.5;
+}
+
+.gallery-photo-check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid white;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  transition: background 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.gallery-photo.selected .gallery-photo-check {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.gallery-add-row {
+  padding: 12px;
+  border-top: 1px solid var(--card-border);
+}
+
+.gallery-add-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--card-bg);
+  border: 2px dashed var(--card-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.gallery-add-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* ============================================
+   Fullscreen photo viewer
+   ============================================ */
+
+.photo-viewer {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.95);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.photo-viewer.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.photo-viewer img {
+  max-width: 100%;
+  max-height: 85%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.photo-viewer-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
