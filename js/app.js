@@ -713,8 +713,77 @@ function drawMap(topo) {
     p.setAttribute('class', 'route-line'); if (code === 'EG') p.style.stroke = 'var(--blue)'; svg.appendChild(p);
   });
   document.getElementById('map-btns').innerHTML = VOYAGES.map((v, i) =>
-    `<button class="map-btn ${i === 0 ? 'active' : ''}" onclick="this.parentElement.querySelectorAll('.map-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${v.name}</button>`
+    `<button class="map-btn ${i === 0 ? 'active' : ''}" onclick="selectMapVoyage(this, ${v.id})">${v.name}</button>`
   ).join('');
+
+  // Show first voyage detail by default
+  if (VOYAGES.length) showMapVoyageDetail(VOYAGES[0].id);
+}
+
+function selectMapVoyage(btn, voyageId) {
+  btn.parentElement.querySelectorAll('.map-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  showMapVoyageDetail(voyageId);
+}
+
+function showMapVoyageDetail(voyageId) {
+  const v = VOYAGES.find(x => x.id === voyageId);
+  if (!v) return;
+  let panel = document.getElementById('map-detail');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'map-detail';
+    panel.className = 'map-detail';
+    const mapScroll = document.querySelector('#screen-map .screen-scroll');
+    if (mapScroll) mapScroll.appendChild(panel);
+  }
+
+  const allPhotos = v.chapters.flatMap(ch => ch.photos ? ch.photos.filter(p => p.on).map(p => p.url) : []);
+  const places = v.chapters.map(ch => ch.place);
+
+  panel.innerHTML = `
+    <div class="map-detail-header">
+      <div class="map-detail-cover" style="background-image:url('${v.cover}')"></div>
+      <div class="map-detail-info">
+        <h3 class="map-detail-name">${v.name}</h3>
+        <p class="map-detail-meta">${v.country} · ${v.dates}</p>
+        <p class="map-detail-meta">${v.companions ? 'Avec ' + v.companions.join(', ') : ''}</p>
+      </div>
+    </div>
+
+    ${allPhotos.length ? `
+    <div class="map-detail-section">
+      <div class="map-detail-sec-title">
+        <span>Photos (${allPhotos.length})</span>
+        <button class="map-detail-btn" onclick="openVoyage(${v.id})">Voir le carnet</button>
+      </div>
+      <div class="map-detail-photos">
+        ${allPhotos.slice(0, 12).map(url => `<img src="${url}" class="map-detail-photo" onclick="viewPhoto('${url}')">`).join('')}
+        ${allPhotos.length > 12 ? `<div class="map-detail-more">+${allPhotos.length - 12}</div>` : ''}
+      </div>
+    </div>` : ''}
+
+    <div class="map-detail-section">
+      <div class="map-detail-sec-title"><span>Lieux visites (${places.length})</span></div>
+      <div class="map-detail-places">
+        ${places.map(p => `
+          <div class="map-detail-place">
+            <div class="map-detail-place-dot"></div>
+            <div>
+              <div class="map-detail-place-name">${p.name}</div>
+              <div class="map-detail-place-meta">${p.address} · ${p.duration}</div>
+            </div>
+            <div class="map-detail-place-rating">${'★'.repeat(Math.round(p.rating))}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="map-detail-actions">
+      <button class="btn-copper-sm" onclick="openVoyage(${v.id})">Ouvrir le carnet</button>
+      <button class="btn-outline-sm" onclick="curVoyage=${v.id};navigateTo('screen-pdf')">Exporter PDF</button>
+    </div>
+  `;
 }
 
 function ns(tag) { return document.createElementNS('http://www.w3.org/2000/svg', tag); }

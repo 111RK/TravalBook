@@ -688,6 +688,67 @@ html, body { height: 100%; font-family: var(--sans); color: var(--ink); backgrou
 }
 .ch-history-link:hover { text-decoration: underline; }
 
+/* Map voyage detail panel */
+.map-detail { padding: 0 0 40px; margin-top: 8px; }
+.map-detail-header {
+  display: flex; gap: 14px; align-items: center; padding: 14px;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--r);
+  box-shadow: var(--shadow); margin-bottom: 14px;
+}
+.map-detail-cover {
+  width: 70px; height: 70px; border-radius: var(--rs); background-size: cover;
+  background-position: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+.map-detail-name { font: 700 17px var(--serif); color: var(--ink); margin-bottom: 2px; }
+.map-detail-meta { font: 400 11px var(--sans); color: var(--dust); }
+.map-detail-section { margin-bottom: 14px; }
+.map-detail-sec-title {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px; padding: 0 2px;
+}
+.map-detail-sec-title span { font: 600 12px var(--sans); color: var(--ink); text-transform: uppercase; letter-spacing: .5px; }
+.map-detail-btn {
+  background: none; border: none; color: var(--copper); font: 500 11px var(--sans); cursor: pointer;
+}
+.map-detail-photos {
+  display: flex; gap: 6px; overflow-x: auto; padding: 2px 0; scrollbar-width: none;
+}
+.map-detail-photos::-webkit-scrollbar { display: none; }
+.map-detail-photo {
+  width: 72px; height: 72px; border-radius: 10px; object-fit: cover; flex-shrink: 0;
+  cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.08); transition: transform .2s;
+}
+.map-detail-photo:hover { transform: scale(1.05); }
+.map-detail-more {
+  width: 72px; height: 72px; border-radius: 10px; background: var(--bg3); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font: 600 13px var(--sans); color: var(--dust);
+}
+.map-detail-places { display: flex; flex-direction: column; gap: 6px; }
+.map-detail-place {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--rs);
+  box-shadow: var(--shadow);
+}
+.map-detail-place-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--copper); flex-shrink: 0;
+}
+.map-detail-place-name { font: 600 12px var(--sans); color: var(--ink); }
+.map-detail-place-meta { font: 400 10px var(--sans); color: var(--dust); }
+.map-detail-place-rating { margin-left: auto; color: var(--copper); font-size: 11px; }
+.map-detail-actions {
+  display: flex; gap: 8px; margin-top: 14px;
+}
+.btn-copper-sm {
+  flex: 1; padding: 11px; background: var(--copper); color: white; border: none;
+  border-radius: var(--rs); font: 600 12px var(--sans); cursor: pointer;
+}
+.btn-outline-sm {
+  flex: 1; padding: 11px; background: var(--card); color: var(--ink);
+  border: 1.5px solid var(--border); border-radius: var(--rs);
+  font: 500 12px var(--sans); cursor: pointer; box-shadow: var(--shadow);
+}
+
 .ornament { text-align: center; color: var(--copper); letter-spacing: 10px; font-size: 11px; opacity: .45; margin: 8px 0 16px; }
 
 .carnet-footer {
