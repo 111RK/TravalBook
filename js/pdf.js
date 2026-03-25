@@ -1,4 +1,4 @@
-// TravelBook — 6 Unique Magazine Templates
+// TravelBook — 7 Unique Magazine Templates
 // Each template has its own fonts, colors, layout style
 
 function splitAtSentence(text, part) {
@@ -72,8 +72,338 @@ const TEMPLATE_STYLES = {
     dropcapSize: '56px', dropcapColor: '#e07a5f',
     barStyle: 'background:#e07a5f;color:white',
     placeBar: '#e07a5f', starColor: '#e07a5f'
+  },
+  'portrait-photobook': {
+    fonts: 'Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Montserrat:wght@300;400;500;600;700;800&family=Dancing+Script:wght@400;600;700',
+    titleFont: "'Montserrat',sans-serif",
+    bodyFont: "'Montserrat',sans-serif",
+    scriptFont: "'Dancing Script',cursive",
+    serifFont: "'Playfair Display',serif",
+    colors: { bg:'#fff', bg2:'#f5f5f5', ink:'#2a2a2a', accent:'#1a1a1a', accent2:'#555', muted:'#888', card:'#f0f0f0', border:'#ddd', coverBg:'rgba(0,0,0,.4)', quote:'rgba(0,0,0,.03)', dark:'#1a1a1a', darkAlt:'#252525' },
+    coverTitleSize: '72px', titleSize: '28px', secSize: '18px', bodySize: '11px',
+    dropcapSize: '64px', dropcapColor: '#1a1a1a',
+    barStyle: 'background:#1a1a1a;color:white',
+    placeBar: '#1a1a1a', starColor: '#c8a050'
   }
 };
+
+// === PHOTO BOOK TRAVEL — Dedicated template generator ===
+function generatePhotoBookHtml(v, tpl, S) {
+  const C = S.colors;
+  const scriptFont = S.scriptFont || "'Dancing Script',cursive";
+  const serifFont = S.serifFont || "'Playfair Display',serif";
+  const quotes = QUOTES[v.country] || [{text:"Le voyage est la seule chose qu'on achète qui nous rend plus riche.",attr:"Anonyme"}];
+  const gSel = (ch) => ch.photos ? ch.photos.filter(p => p.on) : [];
+
+  let pages = '';
+
+  // ===== PAGE 1: COVER — White frame, "PHOTO BOOK" header, Travel script =====
+  pages += `
+  <div class="pb-page pb-cover">
+    <div class="pb-cover-inner">
+      <div class="pb-cover-header">
+        <span class="pb-arrow">›››› </span>
+        <span class="pb-header-label">WORLDTRAVEL</span>
+      </div>
+      <div class="pb-cover-title">PHOTO BOOK</div>
+      <div class="pb-cover-photo">
+        <img src="${v.cover}" alt="">
+        <div class="pb-cover-script">${v.name}</div>
+      </div>
+      <div class="pb-cover-continents">${v.country ? v.country.toUpperCase() : 'EUROPE'} | ${v.dates || ''}</div>
+    </div>
+  </div>`;
+
+  // ===== CHAPTER PAGES =====
+  v.chapters.forEach((ch, i) => {
+    const photos = gSel(ch);
+    const allPhotos = photos.map(p => p.url);
+    const q = quotes[i % quotes.length];
+
+    // --- PAGE: Chapter divider (dark bg, framed title) ---
+    pages += `
+    <div class="pb-page pb-divider">
+      <div class="pb-divider-bg" ${allPhotos[0] ? `style="background-image:url(${allPhotos[0]})"` : ''}></div>
+      <div class="pb-divider-overlay"></div>
+      <div class="pb-divider-frame">
+        <div class="pb-divider-title">${ch.title.toUpperCase()}</div>
+      </div>
+    </div>`;
+
+    // --- PAGE: Photo grid + text (Must-See Landmarks style) ---
+    if (allPhotos.length >= 3) {
+      const gridPhotos = allPhotos.slice(0, Math.min(8, allPhotos.length));
+      // Build adaptive grid rows
+      let gridHtml = '';
+      if (gridPhotos.length >= 8) {
+        gridHtml = `
+          <div class="pb-grid-row pb-grid-3">${gridPhotos.slice(0, 3).map(u => `<img src="${u}">`).join('')}</div>
+          <div class="pb-grid-row pb-grid-2">${gridPhotos.slice(3, 5).map(u => `<img src="${u}">`).join('')}</div>
+          <div class="pb-grid-row pb-grid-3">${gridPhotos.slice(5, 8).map(u => `<img src="${u}">`).join('')}</div>`;
+      } else if (gridPhotos.length >= 6) {
+        gridHtml = `
+          <div class="pb-grid-row pb-grid-3">${gridPhotos.slice(0, 3).map(u => `<img src="${u}">`).join('')}</div>
+          <div class="pb-grid-row pb-grid-3">${gridPhotos.slice(3, 6).map(u => `<img src="${u}">`).join('')}</div>`;
+      } else if (gridPhotos.length >= 4) {
+        gridHtml = `
+          <div class="pb-grid-row pb-grid-2">${gridPhotos.slice(0, 2).map(u => `<img src="${u}">`).join('')}</div>
+          <div class="pb-grid-row pb-grid-2">${gridPhotos.slice(2, 4).map(u => `<img src="${u}">`).join('')}</div>`;
+      } else {
+        gridHtml = `<div class="pb-grid-row pb-grid-3">${gridPhotos.map(u => `<img src="${u}">`).join('')}</div>`;
+      }
+
+      pages += `
+      <div class="pb-page pb-grid-page">
+        <div class="pb-grid-photos">${gridHtml}</div>
+        <div class="pb-grid-text">
+          <h2 class="pb-section-title">${ch.title.toUpperCase()}</h2>
+          <p class="pb-body">${ch.text}</p>
+          <div class="pb-pin">📍</div>
+        </div>
+      </div>`;
+    }
+
+    // --- PAGE: Full-bleed photo with white frame overlay ---
+    if (allPhotos[0]) {
+      pages += `
+      <div class="pb-page pb-fullbleed">
+        <img src="${allPhotos[0]}" class="pb-fullbleed-img">
+        <div class="pb-fullbleed-frame"></div>
+        <div class="pb-fullbleed-script">${ch.place.name}</div>
+        <div class="pb-fullbleed-caption">
+          <span class="pb-icon-loc">📍</span>
+          ${ch.place.address || ch.place.name}<br>
+          ${ch.day} · ${ch.place.duration}
+        </div>
+      </div>`;
+    }
+
+    // --- PAGE: Split layout (photo left + text right) — every other chapter ---
+    if (i % 2 === 0 && allPhotos.length >= 2) {
+      pages += `
+      <div class="pb-page pb-split">
+        <div class="pb-split-photo">
+          <img src="${allPhotos[Math.min(1, allPhotos.length - 1)]}" alt="">
+          <div class="pb-split-photo-frame"></div>
+        </div>
+        <div class="pb-split-text">
+          <div class="pb-split-dots">
+            <span class="pb-dot-big"></span>
+            <span class="pb-dot-small"></span>
+          </div>
+          <h2 class="pb-split-title">${ch.title.toUpperCase()}</h2>
+          <p class="pb-split-body">${ch.text}</p>
+          ${ch.history ? `<div class="pb-history"><div class="pb-history-label">Histoire</div><p>${ch.history.summary}</p></div>` : ''}
+        </div>
+      </div>`;
+    }
+
+    // --- PAGE: Quote page (alternating) ---
+    if (i % 3 === 1) {
+      pages += `
+      <div class="pb-page pb-quote-page">
+        ${allPhotos[allPhotos.length - 1] ? `<img src="${allPhotos[allPhotos.length - 1]}" class="pb-quote-bg">` : ''}
+        <div class="pb-quote-overlay"></div>
+        <div class="pb-quote-content">
+          <div class="pb-quote-mark">"</div>
+          <p class="pb-quote-text">${q.text}</p>
+          <span class="pb-quote-attr">— ${q.attr}</span>
+        </div>
+      </div>`;
+    }
+  });
+
+  // ===== ROUTE / STATS PAGE =====
+  pages += `
+  <div class="pb-page pb-stats-page">
+    <div class="pb-stats-left">
+      <h2 class="pb-section-title">ITINÉRAIRE</h2>
+      <div class="pb-route">
+        <div class="pb-route-item"><div class="pb-route-dot pb-route-start"></div><span>Départ</span></div>
+        ${v.chapters.map((ch, i) => `
+          <div class="pb-route-line"></div>
+          <div class="pb-route-item"><div class="pb-route-dot ${i === v.chapters.length - 1 ? 'pb-route-end' : ''}"></div><div><strong>${ch.place.name}</strong><br><small>${ch.day} · ${ch.place.duration}</small></div></div>
+        `).join('')}
+        <div class="pb-route-line"></div>
+        <div class="pb-route-item"><div class="pb-route-dot pb-route-start"></div><span>Retour</span></div>
+      </div>
+    </div>
+    <div class="pb-stats-right">
+      <h2 class="pb-section-title">RÉSUMÉ</h2>
+      <div class="pb-stats-grid">
+        <div class="pb-stat"><span class="pb-stat-num">${v.stats.photos}</span><span class="pb-stat-label">Photos</span></div>
+        <div class="pb-stat"><span class="pb-stat-num">${v.stats.lieux}</span><span class="pb-stat-label">Lieux</span></div>
+        <div class="pb-stat"><span class="pb-stat-num">${v.stats.mots.toLocaleString()}</span><span class="pb-stat-label">Mots</span></div>
+        <div class="pb-stat"><span class="pb-stat-num">${v.stats.temp}</span><span class="pb-stat-label">Temp.</span></div>
+      </div>
+      <div class="pb-companions">
+        <h4>Voyageurs</h4>
+        ${['raph', ...(v.companions || []).map(c => c.toLowerCase())].map(f => { const comp = COMPANIONS[f]; return comp ? `<div class="pb-comp"><div class="pb-comp-av ${comp.gender === 'F' ? 'f' : ''}">${comp.name[0]}</div><span>${comp.name} — ${comp.role}</span></div>` : ''; }).join('')}
+      </div>
+    </div>
+  </div>`;
+
+  // ===== BACK COVER =====
+  pages += `
+  <div class="pb-page pb-back">
+    <div class="pb-back-content">
+      <img src="${v.cover}" class="pb-back-photo" alt="">
+      <div class="pb-back-line">
+        <span class="pb-back-rule"></span>
+        <div class="pb-back-icons">📘 ✈️ 🌍</div>
+        <span class="pb-back-rule"></span>
+      </div>
+      <p class="pb-back-text">TravelBook — Votre livre de voyage personnel.<br>Généré le ${new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+    </div>
+  </div>`;
+
+  // ===== FULL HTML =====
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>TravelBook — ${v.name}</title>
+<link href="https://fonts.googleapis.com/css2?family=${S.fonts}&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  @page{size:A4 portrait;margin:0}
+  body{font-family:${S.bodyFont};color:${C.ink};background:#666;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+  .pb-page{width:210mm;height:297mm;overflow:hidden;page-break-after:always;position:relative;margin:0 auto 4px;background:${C.bg}}
+
+  /* ===== COVER ===== */
+  .pb-cover{display:flex;align-items:center;justify-content:center}
+  .pb-cover-inner{width:100%;height:100%;padding:18mm;display:flex;flex-direction:column;align-items:center}
+  .pb-cover-header{display:flex;align-items:center;gap:6px;align-self:flex-end;margin-bottom:8px}
+  .pb-arrow{font:700 12px ${S.bodyFont};color:${C.accent};letter-spacing:-2px}
+  .pb-header-label{font:500 9px ${S.bodyFont};color:${C.muted};letter-spacing:3px;text-transform:uppercase}
+  .pb-cover-title{font:800 42px ${S.bodyFont};color:${C.accent};letter-spacing:8px;text-transform:uppercase;margin:12px 0 20px;text-align:center}
+  .pb-cover-photo{position:relative;width:100%;flex:1;overflow:hidden;border-radius:2px;box-shadow:0 8px 40px rgba(0,0,0,.15)}
+  .pb-cover-photo img{width:100%;height:100%;object-fit:cover}
+  .pb-cover-script{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font:700 64px ${scriptFont};color:white;text-shadow:0 4px 30px rgba(0,0,0,.5);white-space:nowrap}
+  .pb-cover-continents{font:500 9px ${S.bodyFont};color:${C.muted};letter-spacing:3px;text-transform:uppercase;margin-top:14px;text-align:center}
+
+  /* ===== CHAPTER DIVIDER ===== */
+  .pb-divider{display:flex;align-items:center;justify-content:center}
+  .pb-divider-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:brightness(.2) blur(2px)}
+  .pb-divider-overlay{position:absolute;inset:0;background:rgba(20,20,20,.85)}
+  .pb-divider-frame{position:relative;border:2px solid rgba(255,255,255,.6);padding:40px 55px;text-align:center}
+  .pb-divider-title{font:700 32px ${S.bodyFont};color:white;letter-spacing:6px;text-transform:uppercase;line-height:1.4}
+
+  /* ===== PHOTO GRID PAGE ===== */
+  .pb-grid-page{display:flex;flex-direction:column;padding:10mm}
+  .pb-grid-photos{flex:1;display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
+  .pb-grid-row{display:grid;gap:4px;flex:1}
+  .pb-grid-3{grid-template-columns:1fr 1fr 1fr}
+  .pb-grid-2{grid-template-columns:1fr 1fr}
+  .pb-grid-row img{width:100%;height:100%;object-fit:cover;border-radius:2px}
+  .pb-grid-text{padding:0 5mm}
+  .pb-section-title{font:800 28px ${S.bodyFont};color:${C.accent};letter-spacing:2px;margin-bottom:10px}
+  .pb-body{font:400 11px ${S.bodyFont};color:${C.ink};line-height:1.8}
+  .pb-pin{font-size:18px;margin-top:10px;opacity:.6}
+
+  /* ===== FULL BLEED WITH FRAME ===== */
+  .pb-fullbleed{overflow:hidden}
+  .pb-fullbleed-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .pb-fullbleed-frame{position:absolute;top:16mm;left:16mm;right:16mm;bottom:16mm;border:2px solid rgba(255,255,255,.7);pointer-events:none}
+  .pb-fullbleed-script{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font:700 52px ${scriptFont};color:white;text-shadow:0 4px 25px rgba(0,0,0,.5);white-space:nowrap}
+  .pb-fullbleed-caption{position:absolute;bottom:22mm;right:22mm;font:400 9px ${S.bodyFont};color:rgba(255,255,255,.8);text-align:right;line-height:1.6;background:rgba(0,0,0,.3);padding:8px 14px;border-radius:4px;backdrop-filter:blur(4px)}
+  .pb-icon-loc{margin-right:4px}
+
+  /* ===== SPLIT LAYOUT ===== */
+  .pb-split{display:grid;grid-template-columns:1fr 1fr;height:297mm}
+  .pb-split-photo{position:relative;overflow:hidden}
+  .pb-split-photo img{width:100%;height:100%;object-fit:cover}
+  .pb-split-photo-frame{position:absolute;inset:10mm;border:2px solid ${C.accent}}
+  .pb-split-text{padding:16mm 12mm;display:flex;flex-direction:column;justify-content:center}
+  .pb-split-dots{margin-bottom:16px}
+  .pb-dot-big{display:inline-block;width:12px;height:12px;border-radius:50%;background:${C.accent};margin-right:4px}
+  .pb-dot-small{display:inline-block;width:7px;height:7px;border-radius:50%;background:${C.muted}}
+  .pb-split-title{font:700 26px ${serifFont};color:${C.accent};line-height:1.2;margin-bottom:16px}
+  .pb-split-body{font:400 11px ${S.bodyFont};color:#444;line-height:1.85}
+  .pb-history{margin-top:16px;padding:12px;background:${C.bg2};border-radius:6px}
+  .pb-history .pb-history-label{font:600 9px ${S.bodyFont};color:${C.accent};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+  .pb-history p{font:400 10px ${S.bodyFont};color:${C.muted};line-height:1.6;margin:0}
+
+  /* ===== QUOTE PAGE ===== */
+  .pb-quote-page{display:flex;align-items:center;justify-content:center}
+  .pb-quote-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .pb-quote-overlay{position:absolute;inset:0;background:rgba(0,0,0,.6)}
+  .pb-quote-content{position:relative;text-align:center;padding:30mm;max-width:80%}
+  .pb-quote-mark{font:700 80px ${serifFont};color:rgba(255,255,255,.3);line-height:1}
+  .pb-quote-text{font:italic 400 22px ${serifFont};color:white;line-height:1.6;margin:10px 0 16px}
+  .pb-quote-attr{font:400 11px ${S.bodyFont};color:rgba(255,255,255,.6);letter-spacing:2px}
+
+  /* ===== STATS PAGE ===== */
+  .pb-stats-page{display:grid;grid-template-columns:1fr 1fr;height:297mm}
+  .pb-stats-left{padding:16mm 10mm;border-right:1px solid ${C.border}}
+  .pb-stats-right{padding:16mm 10mm}
+  .pb-route{padding:12px 0}
+  .pb-route-item{display:flex;align-items:center;gap:10px;padding:5px 0}
+  .pb-route-item strong{font:600 12px ${S.bodyFont};color:${C.accent}}
+  .pb-route-item small{font-size:9px;color:${C.muted}}
+  .pb-route-dot{width:10px;height:10px;border-radius:50%;background:${C.accent};flex-shrink:0}
+  .pb-route-start{box-shadow:0 0 0 3px rgba(26,26,26,.2)}
+  .pb-route-end{background:${C.accent2}}
+  .pb-route-line{width:2px;height:14px;background:${C.accent};margin-left:4px;opacity:.3}
+  .pb-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+  .pb-stat{text-align:center;padding:14px;background:${C.bg2};border-radius:8px}
+  .pb-stat-num{font:800 28px ${S.bodyFont};color:${C.accent};display:block}
+  .pb-stat-label{font:400 9px ${S.bodyFont};color:${C.muted};text-transform:uppercase;letter-spacing:1px}
+  .pb-companions{margin-top:20px}
+  .pb-companions h4{font:600 10px ${S.bodyFont};color:${C.accent};text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+  .pb-comp{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid ${C.border};font:400 11px ${S.bodyFont}}
+  .pb-comp-av{width:30px;height:30px;border-radius:50%;background:${C.accent};color:white;display:flex;align-items:center;justify-content:center;font:700 12px ${S.bodyFont}}
+  .pb-comp-av.f{background:${C.muted}}
+
+  /* ===== BACK COVER ===== */
+  .pb-back{background:${C.dark};display:flex;align-items:center;justify-content:center}
+  .pb-back-content{text-align:center;padding:30mm}
+  .pb-back-photo{width:160px;height:110px;object-fit:cover;border-radius:4px;box-shadow:0 8px 30px rgba(0,0,0,.4);margin-bottom:24px}
+  .pb-back-line{display:flex;align-items:center;gap:14px;margin:14px 0}
+  .pb-back-rule{flex:1;height:1px;background:rgba(255,255,255,.25)}
+  .pb-back-icons{font-size:16px;letter-spacing:8px}
+  .pb-back-text{font:400 11px ${S.bodyFont};color:rgba(255,255,255,.45);line-height:1.7;margin-top:18px}
+
+  /* TOOLBAR */
+  .toolbar{position:fixed;bottom:0;left:0;right:0;background:#1a1a1a;padding:14px 20px;display:flex;gap:10px;justify-content:center;z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,.3)}
+  .toolbar button{padding:12px 24px;border:none;border-radius:8px;font:600 14px ${S.bodyFont};cursor:pointer;transition:all .2s}
+  .btn-print{background:${C.accent};color:white}
+  .btn-print:hover{opacity:.85}
+  .btn-pdf{background:#c8864a;color:white}
+  .btn-pdf:hover{opacity:.85}
+  @media print{.toolbar{display:none!important}body{background:white}.pb-page{margin:0;box-shadow:none}}
+</style></head><body>
+
+${pages}
+
+<div class="toolbar">
+  <button class="btn-print" onclick="window.print()">Imprimer</button>
+  <button class="btn-pdf" onclick="savePdf()">Convertir en PDF</button>
+</div>
+
+<script>
+async function savePdf() {
+  const btn = document.querySelector('.btn-pdf');
+  btn.textContent = 'Conversion...'; btn.disabled = true;
+  document.querySelector('.toolbar').style.display = 'none';
+  const pages = document.querySelectorAll('.pb-page');
+  const {jsPDF} = window.jspdf;
+  const pdf = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W = pdf.internal.pageSize.getWidth(), H = pdf.internal.pageSize.getHeight();
+  for (let i = 0; i < pages.length; i++) {
+    if (i > 0) pdf.addPage();
+    try {
+      const c = await html2canvas(pages[i], {scale:2, useCORS:true, allowTaint:true, width:pages[i].offsetWidth, height:pages[i].offsetHeight});
+      pdf.addImage(c.toDataURL('image/jpeg',.85), 'JPEG', 0, 0, W, H);
+    } catch(e) { console.warn('Page '+i+' skip:', e); }
+  }
+  pdf.save('TravelBook-${v.name.replace(/[^a-zA-Z0-9]/g, '')}.pdf');
+  document.querySelector('.toolbar').style.display = 'flex';
+  btn.textContent = 'Convertir en PDF'; btn.disabled = false;
+}
+<\/script>
+</body></html>`;
+}
 
 function downloadPdf() {
   const v = VOYAGES.find(x => x.id === curVoyage);
@@ -86,6 +416,15 @@ function downloadPdf() {
   const S = TEMPLATE_STYLES[tpl.id] || TEMPLATE_STYLES['landscape-magazine'];
   const C = S.colors;
   const isDark = S.dark || false;
+
+  // Photo Book Travel uses its own dedicated generator
+  if (tpl.id === 'portrait-photobook') {
+    const html = generatePhotoBookHtml(v, tpl, S);
+    const w = window.open('', '_blank');
+    if (w) { w.document.write(html); w.document.close(); }
+    else { showToast('Autorisez les pop-ups'); }
+    return;
+  }
 
   const pageSize = isLand ? 'A4 landscape' : (Array.isArray(tpl.format) ? '210mm 210mm' : 'A5 portrait');
   const pw = isLand ? '297mm' : (Array.isArray(tpl.format) ? '210mm' : '148mm');
