@@ -377,10 +377,9 @@ function generatePhotoBookHtml(v, tpl, S) {
   /* ===== FLIPBOOK OVERLAY ===== */
   #flipbook-overlay{position:fixed;inset:0;background:#1a1a1a;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:1000}
   #flipbook-overlay.active{display:flex}
-  #flipbook-container{position:relative;transition:transform .3s ease}
-  #flipbook-container.cover-mode{transform:translateX(25%)}
-  .stf__parent{box-shadow:0 10px 60px rgba(0,0,0,.5);background:transparent!important}
-  .stf__block{background:#1a1a1a!important}
+  #flipbook-container{position:relative;overflow:hidden;transition:all .4s ease}
+  .stf__parent{box-shadow:0 10px 60px rgba(0,0,0,.5);background:transparent!important;transition:clip-path .4s ease, transform .4s ease}
+  #flipbook-container.cover-mode .stf__parent{clip-path:inset(0 0 0 50%);transform:translateX(-25%)}
   .fb-toolbar{position:fixed;bottom:0;left:0;right:0;background:rgba(20,20,20,.95);backdrop-filter:blur(10px);padding:12px 20px;display:flex;align-items:center;justify-content:center;gap:12px;z-index:1001;border-top:1px solid rgba(255,255,255,.1)}
   .fb-btn{padding:10px 20px;border:none;border-radius:8px;font:600 13px ${S.bodyFont};cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
   .fb-btn:hover{opacity:.85;transform:translateY(-1px)}
