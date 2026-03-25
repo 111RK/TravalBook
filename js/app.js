@@ -59,12 +59,12 @@ function navTo(id) {
 // =============================================
 function doLogin() {
   localStorage.setItem('tb-logged', '1');
-  showToast('Connexion reussie');
+  showToast('Connexion réussie');
   setTimeout(() => navigateTo('screen-home'), 400);
 }
 function doSignup() {
   localStorage.setItem('tb-logged', '1');
-  showToast('Compte cree');
+  showToast('Compte créé');
   setTimeout(() => navigateTo('screen-home'), 400);
 }
 function logout() {
@@ -82,7 +82,7 @@ function renderTrips() {
     return `
     <div class="trip-card" onclick="openVoyage(${v.id})">
       <div class="trip-thumb" style="background-image:url('${v.cover}')">
-        <span class="trip-badge ${v.badge === 'ok' ? 'ok' : 'pdf'}">${v.badge === 'ok' ? 'Pret' : 'PDF'}</span>
+        <span class="trip-badge ${v.badge === 'ok' ? 'ok' : 'pdf'}">${v.badge === 'ok' ? 'Prêt' : 'PDF'}</span>
       </div>
       <div class="trip-info">
         <div class="trip-name">${v.name}</div>
@@ -160,7 +160,7 @@ function triggerPhotoImport() {
     }
 
     renderImportedPhotos();
-    showToast(files.length + ' photo(s) importee(s)');
+    showToast(files.length + ' photo(s) importée(s)');
   };
   inp.click();
 }
@@ -203,7 +203,7 @@ function renderImportedPhotos() {
   grid.innerHTML = html;
 
   const selCount = importedPhotos.filter(p => p.selected).length;
-  document.getElementById('photo-count').textContent = selCount + ' photos selectionnees';
+  document.getElementById('photo-count').textContent = selCount + ' photos sélectionnées';
 }
 
 function toggleImportPhoto(idx) {
@@ -361,7 +361,7 @@ function openVoyage(id) {
   document.getElementById('carnet-cover').style.backgroundImage = `url('${v.cover}')`;
   document.getElementById('carnet-h').textContent = v.name;
   document.getElementById('carnet-sub').textContent = `${v.country} - ${v.days} jours`;
-  document.getElementById('carnet-style-tag').textContent = v.style || 'Poetique';
+  document.getElementById('carnet-style-tag').textContent = v.style || 'Poétique';
 
   document.getElementById('carnet-stats').innerHTML =
     [{ v: v.stats.photos, l: 'Photos' }, { v: v.stats.lieux, l: 'Lieux' },
@@ -429,17 +429,17 @@ function openVoyage(id) {
         return `<div class="ch-face-av${c.gender==='F'?' female':''}">${c.name[0]}</div>`;
       }).join('');
       const names = ch.faces.map(f => COMPANIONS[f]?.name || f).join(', ');
-      facesHtml = `<div class="ch-faces">${avatars}<span class="ch-faces-text">Visages detectes : ${names}</span></div>`;
+      facesHtml = `<div class="ch-faces">${avatars}<span class="ch-faces-text">Visages détectés :${names}</span></div>`;
     }
 
     // Quote (add for some chapters for variety)
     let quoteHtml = '';
     if (ci === 1 || ci === 4) {
       const quotes = [
-        {text: "Le voyage est la seule chose qu'on achete qui nous rend plus riche.", attr: "Anonyme"},
+        {text: "Le voyage est la seule chose qu'on achète qui nous rend plus riche.", attr: "Anonyme"},
         {text: "On ne fait pas un voyage, c'est le voyage qui nous fait.", attr: "John Steinbeck"},
         {text: "Voyager, c'est grandir.", attr: "Pierre Desproges"},
-        {text: "La vie, c'est ce qui arrive quand on est occupe a faire d'autres projets.", attr: "John Lennon"},
+        {text: "La vie, c'est ce qui arrive quand on est occupé à faire d'autres projets.", attr: "John Lennon"},
         {text: "L'aventure est dans chaque souffle de vent.", attr: "Anonyme"}
       ];
       const q = quotes[ci % quotes.length];
@@ -453,7 +453,7 @@ function openVoyage(id) {
         <div class="hi-title">Points forts du jour</div>
         <ul class="hi-list">
           <li><div class="hi-dot"></div>${ch.place.name} (${ch.place.duration})</li>
-          <li><div class="hi-dot"></div>Meteo : ${v.stats.temp} en moyenne</li>
+          <li><div class="hi-dot"></div>Météo :${v.stats.temp} en moyenne</li>
           <li><div class="hi-dot"></div>${sel.length} photos prises</li>
         </ul>
       </div>`;
@@ -463,7 +463,7 @@ function openVoyage(id) {
     let mapHtml = '';
     if (ci % 3 === 2) {
       mapHtml = `<div class="map-card">
-        <div class="map-card-top"><span class="map-card-title">Itineraire du jour</span><span style="font:400 10px var(--sans);color:var(--copper)">Voir</span></div>
+        <div class="map-card-top"><span class="map-card-title">Itinéraire du jour</span><span style="font:400 10px var(--sans);color:var(--copper)">Voir</span></div>
         <div class="map-card-view"><div class="map-card-pin" style="top:40%;left:45%">📍</div><div class="map-card-pin" style="top:60%;left:65%">📍</div></div>
         <div class="map-card-tags"><span class="map-card-tag">${ch.place.name}</span><span class="map-card-tag">${ch.place.address}</span></div>
       </div>`;
@@ -485,7 +485,7 @@ function openVoyage(id) {
           ${ch.photos.map((p, pi) => `<div class="ch-thumb ${p.on ? 'on' : ''}" style="background-image:url('${p.url}')" onclick="togPhoto(${v.id},${ci},${pi})"><div class="ch-thumb-ck">\u2713</div></div>`).join('')}
           <div class="ch-add" onclick="addPhoto(${v.id},${ci})">+</div>
         </div>
-        <div class="ch-sel" onclick="openGallery(${v.id},${ci})">${sel.length}/${ch.photos.length} photos - <b>Gerer</b></div>
+        <div class="ch-sel" onclick="openGallery(${v.id},${ci})">${sel.length}/${ch.photos.length} photos - <b>Gérer</b></div>
       ` : ''}
       <div class="ch-place">
         <div style="flex:1"><div class="ch-pname">${ch.place.name}</div><div class="ch-pmeta">${ch.place.address} · ${ch.place.duration}</div></div>
@@ -544,7 +544,7 @@ function openGallery(vid, ci) {
   if (!g) { g = document.createElement('div'); g.className = 'gal'; document.getElementById('app-content').appendChild(g); }
   const sel = ch.photos.filter(p => p.on).length;
   g.innerHTML = `
-    <div class="gal-head"><div><div class="gal-title">${ch.day} - Photos</div><div class="gal-sub">${sel} selectionnees sur ${ch.photos.length}</div></div><button class="gal-ok" onclick="closeGallery(${vid})">OK</button></div>
+    <div class="gal-head"><div><div class="gal-title">${ch.day} - Photos</div><div class="gal-sub">${sel} sélectionnées sur ${ch.photos.length}</div></div><button class="gal-ok" onclick="closeGallery(${vid})">OK</button></div>
     <div class="gal-grid" id="gal-grid">${ch.photos.map((p, pi) => `<div class="gal-ph ${p.on ? 'on' : ''}" style="background-image:url('${p.url}')" onclick="togGal(${vid},${ci},${pi})"><div class="gal-ck">${p.on ? '\u2713' : ''}</div></div>`).join('')}</div>
     <div class="gal-add">
       <div style="display:flex;gap:8px;margin-bottom:8px">
@@ -561,10 +561,10 @@ async function galSearch(vid, ci) {
   if (!q) return;
   showToast('Recherche en cours...');
   const photos = await searchPhotos(q);
-  if (!photos.length) { showToast('Aucune photo trouvee'); return; }
+  if (!photos.length) { showToast('Aucune photo trouvée'); return; }
   const v = VOYAGES.find(x => x.id === vid);
   photos.forEach(p => { v.chapters[ci].photos.push({ url: p.url, thumb: p.thumb, on: 0 }); });
-  showToast(photos.length + ' photos ajoutees');
+  showToast(photos.length + ' photos ajoutées');
   openGallery(vid, ci);
 }
 
@@ -585,7 +585,7 @@ function addPhoto(vid, ci) {
     Array.from(e.target.files).forEach(f => {
       VOYAGES.find(x => x.id === vid).chapters[ci].photos.push({ url: URL.createObjectURL(f), on: 1 });
     });
-    if (e.target.files.length) { showToast(e.target.files.length + ' photo(s) ajoutee(s)'); openGallery(vid, ci); }
+    if (e.target.files.length) { showToast(e.target.files.length + ' photo(s) ajoutée(s)'); openGallery(vid, ci); }
   };
   inp.click();
 }
@@ -618,7 +618,7 @@ function renderWallet() {
           <div class="bp-airline-name">${bp.airlineFull}</div>
           <div class="bp-flight-num">Vol ${bp.flight} · ${bp.class}</div>
         </div>
-        <div class="bp-auto-tag">Dates detectees automatiquement</div>
+        <div class="bp-auto-tag">Dates détectées automatiquement</div>
       </div>
       <div class="bp-route">
         <div class="bp-airport">
@@ -637,7 +637,7 @@ function renderWallet() {
       </div>
       <div class="bp-details">
         <div class="bp-detail"><span class="bp-detail-label">Date</span><span class="bp-detail-value">${bp.date}</span></div>
-        <div class="bp-detail"><span class="bp-detail-label">Siege</span><span class="bp-detail-value">${bp.seat}</span></div>
+        <div class="bp-detail"><span class="bp-detail-label">Siège</span><span class="bp-detail-value">${bp.seat}</span></div>
         <div class="bp-detail"><span class="bp-detail-label">Porte</span><span class="bp-detail-value">${bp.gate}</span></div>
         <div class="bp-detail"><span class="bp-detail-label">Embarq.</span><span class="bp-detail-value">${bp.boarding}</span></div>
       </div>
@@ -764,18 +764,49 @@ function showMapVoyageDetail(voyageId) {
     </div>` : ''}
 
     <div class="map-detail-section">
-      <div class="map-detail-sec-title"><span>Lieux visites (${places.length})</span></div>
+      <div class="map-detail-sec-title"><span>Lieux visités (${v.chapters.length})</span></div>
       <div class="map-detail-places">
-        ${places.map(p => `
-          <div class="map-detail-place">
-            <div class="map-detail-place-dot"></div>
-            <div>
-              <div class="map-detail-place-name">${p.name}</div>
-              <div class="map-detail-place-meta">${p.address} · ${p.duration}</div>
+        ${v.chapters.map((ch, ci) => {
+          const p = ch.place;
+          const chPhotos = ch.photos ? ch.photos.filter(ph => ph.on) : [];
+          const hasHistory = !!ch.history;
+          const hasFood = !!ch.food;
+          const hasExtra = hasHistory || chPhotos.length || hasFood;
+          return `
+          <div class="map-place-accordion" id="map-place-${voyageId}-${ci}">
+            <div class="map-detail-place" onclick="toggleMapPlace(${voyageId},${ci})">
+              <div class="map-detail-place-dot"></div>
+              <div style="flex:1">
+                <div class="map-detail-place-name">${p.name}</div>
+                <div class="map-detail-place-meta">${p.address} · ${p.duration}</div>
+              </div>
+              <div class="map-detail-place-rating">${'★'.repeat(Math.round(p.rating))}</div>
+              ${hasExtra ? '<div class="map-place-chevron">›</div>' : ''}
             </div>
-            <div class="map-detail-place-rating">${'★'.repeat(Math.round(p.rating))}</div>
-          </div>
-        `).join('')}
+            <div class="map-place-expanded">
+              ${hasHistory ? `
+              <div class="map-place-history">
+                <div class="map-place-history-title">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                  Histoire du lieu
+                </div>
+                <p class="map-place-history-text">${ch.history.summary}</p>
+              </div>` : ''}
+              ${chPhotos.length ? `
+              <div class="map-place-photos">
+                ${chPhotos.slice(0, 6).map(ph => `<img src="${ph.url}" class="map-place-photo-thumb" onclick="event.stopPropagation();viewPhoto('${ph.url}')">`).join('')}
+              </div>` : ''}
+              ${hasFood ? `
+              <div class="map-place-food">
+                <div class="map-place-food-icon">🍽️</div>
+                <div>
+                  <div class="map-place-food-name">${ch.food.name}</div>
+                  <div class="map-place-food-desc">${ch.food.desc}</div>
+                </div>
+              </div>` : ''}
+            </div>
+          </div>`;
+        }).join('')}
       </div>
     </div>
 
@@ -784,6 +815,12 @@ function showMapVoyageDetail(voyageId) {
       <button class="btn-outline-sm" onclick="curVoyage=${v.id};navigateTo('screen-pdf')">Exporter PDF</button>
     </div>
   `;
+}
+
+function toggleMapPlace(voyageId, ci) {
+  const el = document.getElementById('map-place-' + voyageId + '-' + ci);
+  if (!el) return;
+  el.classList.toggle('open');
 }
 
 function ns(tag) { return document.createElementNS('http://www.w3.org/2000/svg', tag); }
@@ -821,7 +858,7 @@ function sendChat() {
   const m = document.querySelector('.chat-messages');
   m.innerHTML += `<div class="chat-msg user">${msg}</div>`;
   inp.value = '';
-  setTimeout(() => { m.innerHTML += `<div class="chat-msg ai">C'est note ! Modification effectuee.</div>`; m.scrollTop = m.scrollHeight; }, 1000);
+  setTimeout(() => { m.innerHTML += `<div class="chat-msg ai">C'est noté ! Modification effectuée.</div>`; m.scrollTop = m.scrollHeight; }, 1000);
 }
 
 // PDF is in js/pdf.js

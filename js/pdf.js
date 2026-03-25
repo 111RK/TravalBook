@@ -77,10 +77,10 @@ const TEMPLATE_STYLES = {
 
 function downloadPdf() {
   const v = VOYAGES.find(x => x.id === curVoyage);
-  if (!v) { showToast('Aucun voyage selectionne'); return; }
+  if (!v) { showToast('Aucun voyage sélectionné'); return; }
   const tpl = PDF_TEMPLATES.find(t => t.id === selectedTemplate) || PDF_TEMPLATES[0];
   const isLand = (tpl.orientation || 'landscape') === 'landscape';
-  const quotes = QUOTES[v.country] || [{text:"Le voyage est la seule chose qu'on achete qui nous rend plus riche.",attr:"Anonyme"}];
+  const quotes = QUOTES[v.country] || [{text:"Le voyage est la seule chose qu'on achète qui nous rend plus riche.",attr:"Anonyme"}];
   const gSel = (ch) => ch.photos ? ch.photos.filter(p => p.on) : [];
   const gFaces = (ch) => ch.faces ? ch.faces.map(f => COMPANIONS[f]?.name || f).join(', ') : '';
   const S = TEMPLATE_STYLES[tpl.id] || TEMPLATE_STYLES['landscape-magazine'];
@@ -101,7 +101,7 @@ function downloadPdf() {
     const companions = gFaces(ch);
     const layout = i % 3;
 
-    const facesHtml = companions ? `<div class="faces-bar">Visages detectes : ${companions}</div>` : '';
+    const facesHtml = companions ? `<div class="faces-bar">Visages détectés : ${companions}</div>` : '';
     const placeHtml = `<div class="place-card"><h4>${ch.place.name}</h4><p>${ch.place.address} · ${ch.place.duration}</p><span class="stars">${'★'.repeat(Math.round(ch.place.rating))} ${ch.place.rating}</span></div>`;
     const historyHtml = ch.history ? `<div class="history-block"><div class="history-head">Histoire du lieu</div>${ch.history.thumbnail ? `<img src="${ch.history.thumbnail}" class="history-img">` : ''}<p class="history-text">${ch.history.summary}</p></div>` : '';
     const quoteHtml = `<div class="quote"><p>"${q.text}"</p><span>— ${q.attr}</span></div>`;
@@ -239,21 +239,21 @@ function downloadPdf() {
   const routeHtml = `
   <div class="page spread">
     <div class="half left">
-      <h2 class="ch-title">ITINERAIRE</h2>
+      <h2 class="ch-title">ITINÉRAIRE</h2>
       <div class="route">
-        <div class="rp"><div class="rdot start"></div><span>Toulouse (depart)</span></div>
+        <div class="rp"><div class="rdot start"></div><span>Toulouse (départ)</span></div>
         ${v.chapters.map((ch, i) => `<div class="rline"></div><div class="rp"><div class="rdot ${i === v.chapters.length - 1 ? 'last' : ''}"></div><div><strong>${ch.place.name}</strong><br><small>${ch.day} · ${ch.place.duration}</small></div></div>`).join('')}
         <div class="rline"></div>
         <div class="rp"><div class="rdot start"></div><span>Retour Toulouse</span></div>
       </div>
     </div>
     <div class="half right side-bg">
-      <h2 class="sec-title">RESUME DU VOYAGE</h2>
+      <h2 class="sec-title">RÉSUMÉ DU VOYAGE</h2>
       <div class="stats-grid">
         <div class="stat"><span class="stat-n">${v.stats.photos}</span><span>Photos</span></div>
         <div class="stat"><span class="stat-n">${v.stats.lieux}</span><span>Lieux</span></div>
         <div class="stat"><span class="stat-n">${v.stats.mots.toLocaleString()}</span><span>Mots</span></div>
-        <div class="stat"><span class="stat-n">${v.stats.temp}</span><span>Temperature</span></div>
+        <div class="stat"><span class="stat-n">${v.stats.temp}</span><span>Température</span></div>
       </div>
       <div class="comp-sec"><h4>Voyageurs</h4>
         ${['raph', ...(v.companions || []).map(c => c.toLowerCase())].map(f => { const comp = COMPANIONS[f]; return comp ? `<div class="comp"><div class="cav ${comp.gender === 'F' ? 'f' : ''}">${comp.name[0]}</div><span>${comp.name} — ${comp.role}</span></div>` : ''; }).join('')}
@@ -440,7 +440,7 @@ ${routeHtml}
   <h1>TravelBook</h1>
   <p>Votre Livre de Voyage</p>
   <div class="last-line"></div>
-  <p style="margin-top:12px;font-size:10px">Genere le ${new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+  <p style="margin-top:12px;font-size:10px">Généré le ${new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
 </div>
 
 <div class="toolbar">

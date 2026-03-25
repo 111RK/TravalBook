@@ -735,7 +735,52 @@ html, body { height: 100%; font-family: var(--sans); color: var(--ink); backgrou
 }
 .map-detail-place-name { font: 600 12px var(--sans); color: var(--ink); }
 .map-detail-place-meta { font: 400 10px var(--sans); color: var(--dust); }
-.map-detail-place-rating { margin-left: auto; color: var(--copper); font-size: 11px; }
+.map-detail-place-rating { color: var(--copper); font-size: 11px; }
+
+/* Expandable place accordion */
+.map-place-accordion { overflow: hidden; }
+.map-place-accordion .map-detail-place { cursor: pointer; transition: background .2s; }
+.map-place-accordion .map-detail-place:hover { background: var(--bg3); }
+.map-place-chevron {
+  font-size: 18px; color: var(--ink3); font-weight: 700; transition: transform .3s;
+  margin-left: 6px; line-height: 1;
+}
+.map-place-accordion.open .map-place-chevron { transform: rotate(90deg); }
+.map-place-expanded {
+  max-height: 0; overflow: hidden; transition: max-height .35s ease, padding .35s ease;
+  padding: 0 12px; background: var(--bg3); border-radius: 0 0 var(--rs) var(--rs);
+}
+.map-place-accordion.open .map-place-expanded {
+  max-height: 600px; padding: 10px 12px 14px;
+}
+.map-place-history { margin-bottom: 10px; }
+.map-place-history-title {
+  display: flex; align-items: center; gap: 5px;
+  font: 600 10px var(--sans); color: var(--copper); text-transform: uppercase;
+  letter-spacing: .6px; margin-bottom: 6px;
+}
+.map-place-history-text {
+  font: 400 11px var(--sans); line-height: 1.6; color: var(--ink2);
+}
+.map-place-photos {
+  display: flex; gap: 5px; overflow-x: auto; padding: 4px 0 8px;
+  scrollbar-width: none;
+}
+.map-place-photos::-webkit-scrollbar { display: none; }
+.map-place-photo-thumb {
+  width: 52px; height: 52px; border-radius: 8px; object-fit: cover;
+  flex-shrink: 0; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.1);
+  transition: transform .2s;
+}
+.map-place-photo-thumb:hover { transform: scale(1.08); }
+.map-place-food {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 10px; background: var(--card); border-radius: 10px;
+  border: 1px solid var(--border);
+}
+.map-place-food-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+.map-place-food-name { font: 600 12px var(--sans); color: var(--ink); margin-bottom: 2px; }
+.map-place-food-desc { font: 400 10px var(--sans); color: var(--dust); line-height: 1.5; }
 .map-detail-actions {
   display: flex; gap: 8px; margin-top: 14px;
 }
