@@ -382,8 +382,7 @@ html, body { height: 100%; font-family: var(--sans); color: var(--ink); backgrou
 /* =============================================
    SWIPE
    ============================================= */
-#screen-swipe { display: flex; flex-direction: column; overflow: hidden; }
-#screen-swipe.active { display: flex; }
+#screen-swipe.active { display: flex; flex-direction: column; overflow: hidden; }
 .swipe-count { text-align: center; font: 500 13px var(--sans); color: var(--ink3); padding: 10px; flex-shrink: 0; }
 .swipe-zone { flex: 1; display: flex; align-items: center; justify-content: center; padding: 0 24px; position: relative; min-height: 0; }
 .sw-card {
