@@ -377,8 +377,10 @@ function generatePhotoBookHtml(v, tpl, S) {
   /* ===== FLIPBOOK OVERLAY ===== */
   #flipbook-overlay{position:fixed;inset:0;background:#1a1a1a;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:1000}
   #flipbook-overlay.active{display:flex}
-  #flipbook-container{position:relative}
-  .stf__parent{box-shadow:0 10px 60px rgba(0,0,0,.5)}
+  #flipbook-container{position:relative;transition:transform .3s ease}
+  #flipbook-container.cover-mode{transform:translateX(25%)}
+  .stf__parent{box-shadow:0 10px 60px rgba(0,0,0,.5);background:transparent!important}
+  .stf__block{background:#1a1a1a!important}
   .fb-toolbar{position:fixed;bottom:0;left:0;right:0;background:rgba(20,20,20,.95);backdrop-filter:blur(10px);padding:12px 20px;display:flex;align-items:center;justify-content:center;gap:12px;z-index:1001;border-top:1px solid rgba(255,255,255,.1)}
   .fb-btn{padding:10px 20px;border:none;border-radius:8px;font:600 13px ${S.bodyFont};cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
   .fb-btn:hover{opacity:.85;transform:translateY(-1px)}
@@ -505,8 +507,19 @@ async function openFlipbook() {
   });
 
   flipbook.loadFromImages(pageImages);
+
+  // Start in cover mode (centered single page)
+  container.classList.add('cover-mode');
+
   flipbook.on('flip', (e) => {
-    document.getElementById('fb-page-info').textContent = (e.data + 1) + ' / ' + flipbook.getPageCount();
+    const pg = e.data;
+    document.getElementById('fb-page-info').textContent = (pg + 1) + ' / ' + flipbook.getPageCount();
+    // Center when on cover (page 0) or back cover (last page), spread otherwise
+    if (pg === 0 || pg >= flipbook.getPageCount() - 1) {
+      container.classList.add('cover-mode');
+    } else {
+      container.classList.remove('cover-mode');
+    }
   });
   document.getElementById('fb-page-info').textContent = '1 / ' + flipbook.getPageCount();
   document.getElementById('fb-toolbar').style.display = 'flex';
