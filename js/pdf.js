@@ -1,5 +1,14 @@
 // TravelBook — HTML Magazine PDF Generator v2
-// Fixed: page breaks, text visibility, cover image, PDF download button
+
+// Split text at nearest sentence break (period followed by space)
+function splitAtSentence(text, part) {
+  const mid = Math.floor(text.length / 2);
+  // Search for ". " near the middle
+  let breakIdx = text.lastIndexOf('. ', mid + 40);
+  if (breakIdx < mid - 100 || breakIdx < 0) breakIdx = text.indexOf('. ', mid - 40);
+  if (breakIdx < 0) breakIdx = mid; else breakIdx += 2; // after the ". "
+  return part === 0 ? text.substring(0, breakIdx) : text.substring(breakIdx);
+}
 
 function downloadPdf() {
   const v = VOYAGES.find(x => x.id === curVoyage);
@@ -73,9 +82,9 @@ function downloadPdf() {
           ${hero ? `<img src="${hero}" class="top-photo" alt="">` : ''}
           <h2 class="ch-title">${ch.title.toUpperCase()}</h2>
           <div class="subsec"><span class="chev">›</span><h4>${ch.place.name}</h4></div>
-          <p>${ch.text.substring(0, ch.text.length / 2)}</p>
+          <p>${splitAtSentence(ch.text, 0)}</p>
           <div class="subsec"><span class="chev">›</span><h4>Impressions</h4></div>
-          <p>${ch.text.substring(ch.text.length / 2)}</p>
+          <p>${splitAtSentence(ch.text, 1)}</p>
         </div>
         <div class="half right">
           <h2 class="sec-title">INFOS & PHOTOS</h2>
@@ -193,7 +202,7 @@ function downloadPdf() {
   .chev{font-size:15px;color:#4a5028;font-weight:bold}
   .subsec h4{font-size:10px;color:#4a5028;text-transform:uppercase;letter-spacing:1px}
   .faces-bar{font-size:${fs.small};color:#8a8a7a;padding:5px 0;border-top:1px solid #e8e4da;margin-top:6px}
-  .dropcap::first-letter{font:900 42px 'Playfair Display',serif;float:left;color:#4a5028;line-height:.8;margin:3px 6px 0 0}
+  .dropcap::first-letter{font:900 72px/0.65 'Playfair Display',serif;float:left;color:#4a5028;margin:6px 10px 0 -2px;padding-top:8px}
 
   /* ROUTE */
   .route{padding:6px 0}

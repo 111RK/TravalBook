@@ -46,11 +46,11 @@ async function fetchVoyagePhotos(voyage) {
     }
   });
 
-  // Also fetch cover
-  const coverQuery = voyage.name + ' ' + (voyage.country || '') + ' travel';
+  // Also fetch cover — use specific landmark query, not generic "travel"
+  const coverQuery = voyage.name + ' ' + (voyage.country || '') + ' city landmark landscape';
   const coverPhotos = await fetchPhotos(coverQuery, 3);
   if (coverPhotos.length) {
-    voyage.cover = coverPhotos[0].url;
+    voyage.coverPexels = coverPhotos[0].url; // keep original cover as fallback
     // Add remaining cover photos to first chapter
     if (voyage.chapters[0]) {
       const extra = coverPhotos.slice(1).map(p => ({ url: p.url, thumb: p.thumb, on: 0 }));
