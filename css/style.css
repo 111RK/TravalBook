@@ -587,6 +587,81 @@ html, body { height: 100%; font-family: var(--sans); color: var(--ink); backgrou
 .ch-pmeta { font: 400 11px var(--sans); color: var(--ink3); }
 .ch-prating { color: var(--copper); font: 400 12px var(--sans); white-space: nowrap; }
 
+/* === PHOTO LAYOUTS (from traceme_v6) === */
+
+/* Full-bleed photo */
+.img-full { width: calc(100% + 40px); margin-left: -20px; height: 190px; overflow: hidden; margin-bottom: 6px; }
+.img-full img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s; }
+.img-full:hover img { transform: scale(1.02); }
+
+/* Caption */
+.img-cap { font: italic 10px var(--sans); color: var(--dust); text-align: center; margin-bottom: 14px; padding: 0 6px; }
+
+/* 2-col grid */
+.img-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+.img-2 .ph { height: 120px; border-radius: 12px; overflow: hidden; }
+.img-2 .ph img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s; }
+.img-2 .ph:hover img { transform: scale(1.04); }
+
+/* 3-strip */
+.img-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 6px; }
+.img-3 .ph { aspect-ratio: 1; border-radius: 10px; overflow: hidden; }
+.img-3 .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Collage asymetrique */
+.img-coll { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 5px; height: 190px; margin-bottom: 6px; }
+.img-coll .ph-m { grid-row: 1/3; border-radius: 14px; overflow: hidden; }
+.img-coll .ph-m img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.img-coll .ph-s { border-radius: 10px; overflow: hidden; }
+.img-coll .ph-s img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Portrait flottant */
+.img-portrait { float: right; width: 130px; height: 175px; border-radius: 14px; overflow: hidden; margin: 0 0 10px 14px; box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+.img-portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Panoramic */
+.img-pano { width: calc(100% + 40px); margin-left: -20px; height: 150px; overflow: hidden; margin-bottom: 6px; }
+.img-pano img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; display: block; }
+
+/* Mosaique 4x2 */
+.img-mosaic { display: grid; grid-template-columns: repeat(4,1fr); gap: 3px; margin: 14px 0; border-radius: 12px; overflow: hidden; }
+.img-mosaic .pm { aspect-ratio: 1; overflow: hidden; }
+.img-mosaic .pm img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Quote block */
+.quote-block { padding: 14px 16px; margin: 16px 0; border-left: 3px solid var(--copper); background: rgba(200,134,74,.05); border-radius: 0 12px 12px 0; }
+.quote-block p { font: italic 13.5px var(--serif); color: var(--ink); line-height: 1.6; }
+.quote-attr { font: 400 10px var(--sans); color: var(--dust); text-align: right; margin-top: 6px; }
+
+/* Food card */
+.food-card { display: flex; gap: 10px; background: var(--card); border-radius: 14px; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border); cursor: pointer; transition: all .2s; }
+.food-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px var(--shadow); }
+.food-img { width: 60px; height: 60px; border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+.food-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.food-name { font: 600 13px var(--serif); color: var(--ink); margin-bottom: 3px; }
+.food-desc { font: 400 10px var(--sans); color: var(--dust); line-height: 1.5; }
+.food-stars { font: 400 11px var(--sans); color: var(--copper); margin-top: 2px; }
+
+/* Highlight box (dark) */
+.hi-box { background: linear-gradient(135deg, var(--ink) 0%, #2A1E14 100%); border-radius: 16px; padding: 16px; margin: 16px 0; }
+.hi-title { font: italic 14px var(--serif); color: var(--copper-light); margin-bottom: 10px; }
+.hi-list { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.hi-list li { font: 400 11px var(--sans); color: rgba(255,255,255,.72); display: flex; align-items: flex-start; gap: 8px; line-height: 1.5; }
+.hi-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--copper); margin-top: 5px; flex-shrink: 0; }
+
+/* Mini map card */
+.map-card { background: var(--card); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 16px; }
+.map-card-top { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+.map-card-title { font: 500 11px var(--sans); color: var(--ink); }
+.map-card-view { height: 120px; background: linear-gradient(135deg,#e0ecd8,#c4d8b8,#a8c8a0); position: relative; overflow: hidden; }
+.map-card-view::before { content: ''; position: absolute; top: 25%; left: 15%; width: 70%; height: 50%; background: rgba(255,255,255,.25); border-radius: 50%; filter: blur(18px); }
+.map-card-pin { position: absolute; font-size: 16px; transform: translate(-50%,-100%); filter: drop-shadow(0 1px 3px rgba(0,0,0,.3)); }
+.map-card-tags { padding: 8px 10px; display: flex; gap: 5px; flex-wrap: wrap; }
+.map-card-tag { font: 400 10px var(--sans); background: var(--cream); color: var(--ink2); padding: 2px 7px; border-radius: 7px; }
+
+/* Divider ornament */
+.ornament { text-align: center; color: var(--copper); letter-spacing: 10px; font-size: 11px; opacity: .45; margin: 8px 0 16px; }
+
 .carnet-footer {
   display: flex; gap: 10px; padding: 12px 20px 24px;
   position: sticky; bottom: 0;

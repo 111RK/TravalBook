@@ -301,40 +301,105 @@ function openVoyage(id) {
      { v: v.stats.mots.toLocaleString(), l: 'Mots' }, { v: v.stats.temp, l: 'Moy.' }]
     .map(s => `<div class="c-stat"><b>${s.v}</b><small>${s.l}</small></div>`).join('');
 
+  // Photo layout patterns (cycle through for variety)
+  const LAYOUTS = ['full-bleed','collage','two-col','panoramic','portrait'];
+
   document.getElementById('carnet-body').innerHTML = v.chapters.map((ch, ci) => {
     const sel = ch.photos ? ch.photos.filter(p => p.on) : [];
     const hero = sel.length ? sel[0].url : '';
     const firstLetter = ch.text.charAt(0);
     const restText = ch.text.slice(1);
-
-    // Decorate text: wrap place names in italic
     const decoratedText = decorateText(restText, ch.place.name);
+    const layout = LAYOUTS[ci % LAYOUTS.length];
 
-    // Photo layout
-    let photoLayout = '';
-    if (sel.length >= 3) {
-      // Collage: 2-col grid
-      photoLayout = `<div class="ch-photo-grid cols-2">
-        ${sel.slice(1, 3).map(p => `<div class="ch-photo-grid-item" style="background-image:url('${p.url}')" onclick="viewPhoto('${p.url}')"></div>`).join('')}
+    // Build photo layout based on pattern
+    let photoHtml = '';
+    if (hero) {
+      if (layout === 'full-bleed') {
+        photoHtml = `<div class="img-full"><img src="${hero}" alt="${ch.place.name}" onclick="viewPhoto('${hero}')"></div>
+          <div class="img-cap">${ch.place.name} — ${ch.day}</div>`;
+      } else if (layout === 'panoramic') {
+        photoHtml = `<div class="img-pano"><img src="${hero}" alt="${ch.place.name}" onclick="viewPhoto('${hero}')"></div>
+          <div class="img-cap">${ch.place.name}</div>`;
+      } else if (layout === 'portrait' && sel.length >= 1) {
+        photoHtml = `<div class="img-portrait"><img src="${hero}" alt="${ch.place.name}" onclick="viewPhoto('${hero}')"></div>`;
+      } else {
+        photoHtml = `<div class="ch-img" style="background-image:url('${hero}')" onclick="viewPhoto('${hero}')"><div class="ch-img-gradient"></div></div>`;
+      }
+    }
+
+    // Extra photos: varied layouts
+    let extraPhotos = '';
+    if (sel.length >= 4 && layout === 'collage') {
+      extraPhotos = `<div class="img-coll">
+        <div class="ph-m"><img src="${sel[1].url}" onclick="viewPhoto('${sel[1].url}')"></div>
+        <div class="ph-s"><img src="${sel[2].url}" onclick="viewPhoto('${sel[2].url}')"></div>
+        <div class="ph-s"><img src="${sel[3].url}" onclick="viewPhoto('${sel[3].url}')"></div>
       </div>`;
-    } else if (sel.length === 2) {
-      photoLayout = `<div class="ch-photo-grid cols-2">
-        <div class="ch-photo-grid-item" style="background-image:url('${sel[1].url}')" onclick="viewPhoto('${sel[1].url}')"></div>
-        <div class="ch-photo-grid-item" style="background-image:url('${sel[0].url}')" onclick="viewPhoto('${sel[0].url}')"></div>
+    } else if (sel.length >= 3 && layout === 'two-col') {
+      extraPhotos = `<div class="img-2">
+        <div class="ph"><img src="${sel[1].url}" onclick="viewPhoto('${sel[1].url}')"></div>
+        <div class="ph"><img src="${sel[2].url}" onclick="viewPhoto('${sel[2].url}')"></div>
+      </div>`;
+    } else if (sel.length >= 4) {
+      extraPhotos = `<div class="img-3">
+        <div class="ph"><img src="${sel[1].url}" onclick="viewPhoto('${sel[1].url}')"></div>
+        <div class="ph"><img src="${sel[2].url}" onclick="viewPhoto('${sel[2].url}')"></div>
+        <div class="ph"><img src="${sel[3].url}" onclick="viewPhoto('${sel[3].url}')"></div>
+      </div>`;
+    } else if (sel.length >= 2) {
+      extraPhotos = `<div class="img-2">
+        <div class="ph"><img src="${sel[0].url}" onclick="viewPhoto('${sel[0].url}')"></div>
+        <div class="ph"><img src="${sel[1].url}" onclick="viewPhoto('${sel[1].url}')"></div>
       </div>`;
     }
 
-    // Face mentions
+    // Face detection badges
     let facesHtml = '';
     if (ch.faces && ch.faces.length) {
-      const faceAvatars = ch.faces.map(f => {
-        const comp = COMPANIONS[f];
-        if (!comp) return '';
-        const cls = comp.gender === 'F' ? ' female' : '';
-        return `<div class="ch-face-av${cls}">${comp.name[0]}</div>`;
+      const avatars = ch.faces.map(f => {
+        const c = COMPANIONS[f]; if (!c) return '';
+        return `<div class="ch-face-av${c.gender==='F'?' female':''}">${c.name[0]}</div>`;
       }).join('');
       const names = ch.faces.map(f => COMPANIONS[f]?.name || f).join(', ');
-      facesHtml = `<div class="ch-faces">${faceAvatars}<span class="ch-faces-text">Visages detectes : ${names}</span></div>`;
+      facesHtml = `<div class="ch-faces">${avatars}<span class="ch-faces-text">Visages detectes : ${names}</span></div>`;
+    }
+
+    // Quote (add for some chapters for variety)
+    let quoteHtml = '';
+    if (ci === 1 || ci === 4) {
+      const quotes = [
+        {text: "Le voyage est la seule chose qu'on achete qui nous rend plus riche.", attr: "Anonyme"},
+        {text: "On ne fait pas un voyage, c'est le voyage qui nous fait.", attr: "John Steinbeck"},
+        {text: "Voyager, c'est grandir.", attr: "Pierre Desproges"},
+        {text: "La vie, c'est ce qui arrive quand on est occupe a faire d'autres projets.", attr: "John Lennon"},
+        {text: "L'aventure est dans chaque souffle de vent.", attr: "Anonyme"}
+      ];
+      const q = quotes[ci % quotes.length];
+      quoteHtml = `<div class="quote-block"><p>"${q.text}"</p><div class="quote-attr">— ${q.attr}</div></div>`;
+    }
+
+    // Highlight box (for specific chapters)
+    let hiHtml = '';
+    if (ci === 0) {
+      hiHtml = `<div class="hi-box">
+        <div class="hi-title">Points forts du jour</div>
+        <ul class="hi-list">
+          <li><div class="hi-dot"></div>${ch.place.name} (${ch.place.duration})</li>
+          <li><div class="hi-dot"></div>Meteo : ${v.stats.temp} en moyenne</li>
+          <li><div class="hi-dot"></div>${sel.length} photos prises</li>
+        </ul>
+      </div>`;
+    }
+
+    // Map card (every 3rd chapter)
+    let mapHtml = '';
+    if (ci % 3 === 2) {
+      mapHtml = `<div class="map-card">
+        <div class="map-card-top"><span class="map-card-title">Itineraire du jour</span><span style="font:400 10px var(--sans);color:var(--copper)">Voir</span></div>
+        <div class="map-card-view"><div class="map-card-pin" style="top:40%;left:45%">📍</div><div class="map-card-pin" style="top:60%;left:65%">📍</div></div>
+        <div class="map-card-tags"><span class="map-card-tag">${ch.place.name}</span><span class="map-card-tag">${ch.place.address}</span></div>
+      </div>`;
     }
 
     return `
@@ -342,10 +407,12 @@ function openVoyage(id) {
     <div class="ch">
       <div class="ch-day">${ch.day}</div>
       <div class="ch-title">${ch.title}</div>
-      ${hero ? `<div class="ch-img" style="background-image:url('${hero}')" onclick="viewPhoto('${hero}')"><div class="ch-img-gradient"></div></div>` : ''}
+      ${photoHtml}
       <div class="ch-text"><span class="dropcap">${firstLetter}</span>${decoratedText}</div>
-      ${photoLayout}
+      ${quoteHtml}
+      ${extraPhotos}
       ${facesHtml}
+      ${hiHtml}
       ${ch.photos && ch.photos.length ? `
         <div class="ch-strip">
           ${ch.photos.map((p, pi) => `<div class="ch-thumb ${p.on ? 'on' : ''}" style="background-image:url('${p.url}')" onclick="togPhoto(${v.id},${ci},${pi})"><div class="ch-thumb-ck">\u2713</div></div>`).join('')}
@@ -357,6 +424,8 @@ function openVoyage(id) {
         <div style="flex:1"><div class="ch-pname">${ch.place.name}</div><div class="ch-pmeta">${ch.place.address} · ${ch.place.duration}</div></div>
         <div class="ch-prating">${'\u2605'.repeat(Math.round(ch.place.rating))} ${ch.place.rating}</div>
       </div>
+      ${mapHtml}
+      <div class="ornament">· · ·</div>
     </div>`;
   }).join('');
 
