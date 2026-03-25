@@ -38,7 +38,8 @@ async function fetchCover(query) {
 // Pre-fetch all photos for a voyage's chapters
 async function fetchVoyagePhotos(voyage) {
   const promises = voyage.chapters.map(async (ch) => {
-    const query = ch.place.name + ' ' + (voyage.country || '');
+    // Use specific search query for better results
+    const query = (ch.pexelsQuery || ch.place.name) + ' ' + (voyage.country || '') + ' travel photography';
     const photos = await fetchPhotos(query, 5);
     if (photos.length) {
       ch.photos = photos.map((p, i) => ({ url: p.url, thumb: p.thumb, on: i < 3 ? 1 : 0 }));
