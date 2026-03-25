@@ -101,9 +101,17 @@ function generatePhotoBookHtml(v, tpl, S) {
   const coverDateLine = datesParts ? 'du ' + datesParts[1] + ' au ' + datesParts[2] : v.dates || '';
 
   let pages = '';
+  let pgCount = 0; // track page count for spread alignment
 
-  // ===== PAGE 1: COVER =====
-  pages += `
+  const addPage = (html) => { pages += html; pgCount++; };
+  const addBlank = () => addPage(`<div class="pb-page pb-blank"></div>`);
+  // Ensure next page will be on LEFT side of spread (odd index with showCover)
+  const alignLeft = () => { if (pgCount % 2 === 0) addBlank(); };
+  // Ensure next page will be on RIGHT side of spread
+  const alignRight = () => { if (pgCount % 2 === 1) addBlank(); };
+
+  // ===== PAGE 0: COVER (alone on right with showCover) =====
+  addPage(`
   <div class="pb-page pb-cover">
     <div class="pb-cover-inner">
       <div class="pb-cover-header">
@@ -118,7 +126,7 @@ function generatePhotoBookHtml(v, tpl, S) {
       <div class="pb-cover-dates">${coverDateLine}</div>
       <div class="pb-cover-participants">${participants}</div>
     </div>
-  </div>`;
+  </div>`);
 
   // ===== CHAPTER PAGES =====
   v.chapters.forEach((ch, i) => {
@@ -126,20 +134,20 @@ function generatePhotoBookHtml(v, tpl, S) {
     const allPhotos = photos.map(p => p.url);
     const q = quotes[i % quotes.length];
 
-    // --- PAGE: Chapter divider (dark bg, framed title) ---
-    pages += `
+    // --- Chapter divider + grid as a pair (left: divider, right: grid or text) ---
+    alignLeft(); // divider on LEFT
+    addPage(`
     <div class="pb-page pb-divider">
       <div class="pb-divider-bg" ${allPhotos[0] ? `style="background-image:url(${allPhotos[0]})"` : ''}></div>
       <div class="pb-divider-overlay"></div>
       <div class="pb-divider-frame">
         <div class="pb-divider-title">${ch.title.toUpperCase()}</div>
       </div>
-    </div>`;
+    </div>`);
 
-    // --- PAGE: Photo grid + text (Must-See Landmarks style) ---
+    // Grid page on RIGHT (next to divider)
     if (allPhotos.length >= 3) {
       const gridPhotos = allPhotos.slice(0, Math.min(8, allPhotos.length));
-      // Build adaptive grid rows
       let gridHtml = '';
       if (gridPhotos.length >= 8) {
         gridHtml = `
@@ -157,8 +165,7 @@ function generatePhotoBookHtml(v, tpl, S) {
       } else {
         gridHtml = `<div class="pb-grid-row pb-grid-3">${gridPhotos.map(u => `<img src="${u}">`).join('')}</div>`;
       }
-
-      pages += `
+      addPage(`
       <div class="pb-page pb-grid-page">
         <div class="pb-grid-photos">${gridHtml}</div>
         <div class="pb-grid-text">
@@ -166,39 +173,58 @@ function generatePhotoBookHtml(v, tpl, S) {
           <p class="pb-body">${ch.text}</p>
           <div class="pb-pin">📍</div>
         </div>
-      </div>`;
+      </div>`);
     }
 
-    // --- SPREAD: Double-page photo (left half + right half of same image) ---
-    if (allPhotos[0]) {
+    // --- DESIGNED SPREAD: left page (hero + title + thumbs) + right page (text + photos) ---
+    if (allPhotos.length >= 2) {
+      alignLeft(); // ensure spread lands on correct pair
       const histSnippet = ch.history ? ch.history.summary.split(/(?<=[.!?])\s+/).slice(0, 2).join(' ') : '';
-      pages += `
-      <div class="pb-page pb-spread-left">
-        <img src="${allPhotos[0]}" class="pb-spread-img pb-spread-img-left">
-        <div class="pb-spread-left-ov">
-          <div class="pb-spread-day">${ch.day.toUpperCase()}</div>
-          <h2 class="pb-spread-title">${ch.title}</h2>
-          <p class="pb-spread-subtitle">${ch.place.name} · ${ch.place.duration}</p>
+      const thumbs = allPhotos.slice(1, 4);
+      const rightPhotos = allPhotos.slice(4, 7);
+
+      // LEFT PAGE: hero photo top + title + thumbnail strip bottom
+      addPage(`
+      <div class="pb-page pb-dspread-left">
+        <div class="pb-dspread-hero">
+          <img src="${allPhotos[0]}" alt="">
         </div>
-      </div>
-      <div class="pb-page pb-spread-right">
-        <img src="${allPhotos[0]}" class="pb-spread-img pb-spread-img-right">
-        <div class="pb-spread-right-ov">
-          <div class="pb-spread-place">${ch.place.name}</div>
-          <div class="pb-spread-stars">${'★'.repeat(Math.round(ch.place.rating))} ${ch.place.rating}</div>
-          ${histSnippet ? `<p class="pb-spread-history">${histSnippet}</p>` : ''}
-          <div class="pb-spread-quote">
-            <p>"${q.text}"</p>
-            <span>— ${q.attr}</span>
+        <div class="pb-dspread-left-bottom">
+          <div class="pb-dspread-title-row">
+            <span class="pb-dspread-dot"></span>
+            <h2 class="pb-dspread-title">${ch.title.toUpperCase()}</h2>
           </div>
-          <div class="pb-spread-loc">📍 ${ch.place.address || ch.place.name}</div>
+          <div class="pb-dspread-thumbs">
+            ${thumbs.map(u => `<img src="${u}" alt="">`).join('')}
+          </div>
         </div>
-      </div>`;
+      </div>`);
+
+      // RIGHT PAGE: small photo top + text + larger photos bottom
+      addPage(`
+      <div class="pb-page pb-dspread-right">
+        <div class="pb-dspread-right-top">
+          ${rightPhotos[0] ? `<img src="${rightPhotos[0]}" class="pb-dspread-accent-img" alt="">` : ''}
+          <div class="pb-dspread-day">${ch.day}</div>
+        </div>
+        <div class="pb-dspread-text">
+          <p>${ch.text}</p>
+          ${histSnippet ? `<p class="pb-dspread-history">${histSnippet}</p>` : ''}
+        </div>
+        <div class="pb-dspread-quote">
+          <p>"${q.text}"</p>
+          <span>— ${q.attr}</span>
+        </div>
+        <div class="pb-dspread-right-photos">
+          ${rightPhotos.slice(1, 3).map(u => `<img src="${u}" alt="">`).join('')}
+        </div>
+        <div class="pb-dspread-place">📍 ${ch.place.name} · ${ch.place.duration} · ${'★'.repeat(Math.round(ch.place.rating))}</div>
+      </div>`);
     }
 
-    // --- PAGE: Split layout (photo left + text right) — every other chapter ---
+    // --- Split layout (photo left + text right) ---
     if (i % 2 === 0 && allPhotos.length >= 2) {
-      pages += `
+      addPage(`
       <div class="pb-page pb-split">
         <div class="pb-split-photo">
           <img src="${allPhotos[Math.min(1, allPhotos.length - 1)]}" alt="">
@@ -213,12 +239,12 @@ function generatePhotoBookHtml(v, tpl, S) {
           <p class="pb-split-body">${ch.text}</p>
           ${ch.history ? `<div class="pb-history"><div class="pb-history-label">Histoire</div><p>${ch.history.summary}</p></div>` : ''}
         </div>
-      </div>`;
+      </div>`);
     }
 
-    // --- PAGE: Quote page (alternating) ---
+    // --- Quote page ---
     if (i % 3 === 1) {
-      pages += `
+      addPage(`
       <div class="pb-page pb-quote-page">
         ${allPhotos[allPhotos.length - 1] ? `<img src="${allPhotos[allPhotos.length - 1]}" class="pb-quote-bg">` : ''}
         <div class="pb-quote-overlay"></div>
@@ -227,20 +253,21 @@ function generatePhotoBookHtml(v, tpl, S) {
           <p class="pb-quote-text">${q.text}</p>
           <span class="pb-quote-attr">— ${q.attr}</span>
         </div>
-      </div>`;
+      </div>`);
     }
   });
 
-  // ===== ROUTE / STATS PAGE =====
-  pages += `
+  // ===== ROUTE / STATS — as a pair (left: route, right: stats) =====
+  alignLeft(); // route on LEFT
+  addPage(`
   <div class="pb-page pb-stats-page">
     <div class="pb-stats-left">
       <h2 class="pb-section-title">ITINÉRAIRE</h2>
       <div class="pb-route">
         <div class="pb-route-item"><div class="pb-route-dot pb-route-start"></div><span>Départ</span></div>
-        ${v.chapters.map((ch, i) => `
+        ${v.chapters.map((ch, idx) => `
           <div class="pb-route-line"></div>
-          <div class="pb-route-item"><div class="pb-route-dot ${i === v.chapters.length - 1 ? 'pb-route-end' : ''}"></div><div><strong>${ch.place.name}</strong><br><small>${ch.day} · ${ch.place.duration}</small></div></div>
+          <div class="pb-route-item"><div class="pb-route-dot ${idx === v.chapters.length - 1 ? 'pb-route-end' : ''}"></div><div><strong>${ch.place.name}</strong><br><small>${ch.day} · ${ch.place.duration}</small></div></div>
         `).join('')}
         <div class="pb-route-line"></div>
         <div class="pb-route-item"><div class="pb-route-dot pb-route-start"></div><span>Retour</span></div>
@@ -259,7 +286,11 @@ function generatePhotoBookHtml(v, tpl, S) {
         ${['raph', ...(v.companions || []).map(c => c.toLowerCase())].map(f => { const comp = COMPANIONS[f]; return comp ? `<div class="pb-comp"><div class="pb-comp-av ${comp.gender === 'F' ? 'f' : ''}">${comp.name[0]}</div><span>${comp.name} — ${comp.role}</span></div>` : ''; }).join('')}
       </div>
     </div>
-  </div>`;
+  </div>`);
+
+  // Pad to ensure back cover lands on last page (alone on left)
+  // Total must be even for showCover to work correctly
+  if (pgCount % 2 === 0) addBlank();
 
   // ===== BACK COVER =====
   pages += `
@@ -287,6 +318,7 @@ function generatePhotoBookHtml(v, tpl, S) {
   body{font-family:${S.bodyFont};color:${C.ink};background:#666;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 
   .pb-page{width:210mm;height:297mm;overflow:hidden;page-break-after:always;position:relative;margin:0 auto 4px;background:${C.bg}}
+  .pb-blank{background:${C.bg2}}
 
   /* ===== COVER ===== */
   .pb-cover{display:flex;align-items:center;justify-content:center}
@@ -320,26 +352,32 @@ function generatePhotoBookHtml(v, tpl, S) {
   .pb-body{font:400 11px ${S.bodyFont};color:${C.ink};line-height:1.8}
   .pb-pin{font-size:18px;margin-top:10px;opacity:.6}
 
-  /* ===== DOUBLE-PAGE SPREAD (image across 2 pages) ===== */
-  .pb-spread-left,.pb-spread-right{overflow:hidden;position:relative}
-  .pb-spread-img{position:absolute;top:0;height:100%;width:200%;object-fit:cover}
-  .pb-spread-img-left{left:0}
-  .pb-spread-img-right{right:0}
-  /* Spread left overlay: day + title at bottom-left */
-  .pb-spread-left-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.6) 0%,transparent 50%);display:flex;flex-direction:column;justify-content:flex-end;padding:16mm}
-  .pb-spread-day{font:600 10px ${S.bodyFont};color:${C.accent2 || '#ccc'};letter-spacing:4px;background:rgba(0,0,0,.4);padding:4px 12px;border-radius:3px;display:inline-block;margin-bottom:8px;backdrop-filter:blur(4px);align-self:flex-start}
-  .pb-spread-title{font:700 28px ${serifFont};color:white;text-shadow:0 3px 20px rgba(0,0,0,.5);line-height:1.2;margin-bottom:4px}
-  .pb-spread-subtitle{font:400 11px ${S.bodyFont};color:rgba(255,255,255,.7)}
+  /* ===== DESIGNED SPREAD ===== */
+  /* Left page: hero + title + thumbnails */
+  .pb-dspread-left{display:flex;flex-direction:column}
+  .pb-dspread-hero{flex:1;overflow:hidden}
+  .pb-dspread-hero img{width:100%;height:100%;object-fit:cover}
+  .pb-dspread-left-bottom{padding:10mm 10mm 8mm;background:${C.bg}}
+  .pb-dspread-title-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .pb-dspread-dot{width:14px;height:14px;border-radius:50%;background:${C.accent};flex-shrink:0}
+  .pb-dspread-title{font:800 22px ${S.bodyFont};color:${C.accent};letter-spacing:2px;line-height:1.2;margin:0}
+  .pb-dspread-thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+  .pb-dspread-thumbs img{width:100%;height:80px;object-fit:cover;border-radius:3px}
 
-  /* Spread right overlay: place info + quote at bottom-right */
-  .pb-spread-right-ov{position:absolute;bottom:0;right:0;width:70%;padding:14mm;background:linear-gradient(to left,rgba(0,0,0,.65) 0%,rgba(0,0,0,.3) 70%,transparent 100%);display:flex;flex-direction:column;align-items:flex-end;text-align:right}
-  .pb-spread-place{font:700 18px ${S.bodyFont};color:white;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
-  .pb-spread-stars{font-size:12px;color:#c8a050;margin-bottom:8px}
-  .pb-spread-history{font:italic 400 10px ${serifFont};color:rgba(255,255,255,.75);line-height:1.6;margin-bottom:10px;max-width:90%}
-  .pb-spread-quote{border-right:2px solid rgba(255,255,255,.4);padding:8px 12px;margin-bottom:10px}
-  .pb-spread-quote p{font:italic 400 11px ${serifFont};color:rgba(255,255,255,.85);line-height:1.5;margin:0}
-  .pb-spread-quote span{font:400 9px ${S.bodyFont};color:rgba(255,255,255,.5);display:block;margin-top:4px}
-  .pb-spread-loc{font:400 9px ${S.bodyFont};color:rgba(255,255,255,.6)}
+  /* Right page: photo accent + text + photos + place */
+  .pb-dspread-right{display:flex;flex-direction:column;padding:10mm}
+  .pb-dspread-right-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+  .pb-dspread-accent-img{width:45%;height:100px;object-fit:cover;border-radius:4px}
+  .pb-dspread-day{font:600 10px ${S.bodyFont};color:${C.muted};letter-spacing:3px;text-transform:uppercase;padding-top:4px}
+  .pb-dspread-text{flex:1;margin-bottom:12px}
+  .pb-dspread-text p{font:400 10.5px ${S.bodyFont};color:${C.ink};line-height:1.75;margin-bottom:8px}
+  .pb-dspread-history{font:italic 400 10px ${serifFont};color:${C.muted};line-height:1.6}
+  .pb-dspread-quote{border-left:3px solid ${C.accent};padding:8px 14px;margin-bottom:12px;background:${C.quote || 'rgba(0,0,0,.02)'};border-radius:0 6px 6px 0}
+  .pb-dspread-quote p{font:italic 400 11px ${serifFont};color:${C.accent};line-height:1.5;margin:0}
+  .pb-dspread-quote span{font:400 9px ${S.bodyFont};color:${C.muted};display:block;margin-top:4px;text-align:right}
+  .pb-dspread-right-photos{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:10px}
+  .pb-dspread-right-photos img{width:100%;height:120px;object-fit:cover;border-radius:4px}
+  .pb-dspread-place{font:500 9px ${S.bodyFont};color:${C.muted};letter-spacing:1px}
   .pb-icon-loc{margin-right:4px}
 
   /* ===== SPLIT LAYOUT ===== */
