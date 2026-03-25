@@ -400,7 +400,7 @@ html, body { height: 100%; font-family: var(--sans); color: var(--ink); backgrou
 .sw-addr { font: 400 12px var(--sans); color: var(--ink2); margin-bottom: 6px; }
 .sw-stars { color: var(--copper); font-size: 13px; }
 .sw-rating { font: 400 11px var(--sans); color: var(--ink3); }
-.swipe-actions { display: flex; justify-content: center; gap: 40px; padding: 12px 0 16px; background: var(--bg); border-top: 1px solid var(--border); }
+.swipe-actions { display: flex; justify-content: center; gap: 40px; padding: 12px 0 16px; background: var(--bg); border-top: 1px solid var(--border); position: relative; z-index: 50; }
 .swipe-no, .swipe-yes {
   width: 58px; height: 58px; border-radius: 50%; border: none;
   cursor: pointer; display: flex; align-items: center; justify-content: center;

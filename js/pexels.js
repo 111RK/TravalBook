@@ -64,17 +64,14 @@ async function fetchVoyagePhotos(voyage) {
 
 // Fetch all voyages photos
 async function fetchAllPhotos() {
-  // Splash
-  const splashPhotos = await fetchPhotos('travel adventure beautiful landscape', 1);
-  if (splashPhotos.length) {
-    document.getElementById('splash-photo').style.backgroundImage = `url('${splashPhotos[0].url}')`;
+  try {
+    // All voyages in parallel
+    await Promise.all(VOYAGES.map(v => fetchVoyagePhotos(v)));
+    // Re-render
+    renderTrips();
+  } catch (e) {
+    console.warn('fetchAllPhotos error:', e);
   }
-
-  // All voyages in parallel
-  await Promise.all(VOYAGES.map(v => fetchVoyagePhotos(v)));
-
-  // Re-render
-  renderTrips();
 }
 
 // Search photos (for gallery add)
