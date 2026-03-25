@@ -105,57 +105,61 @@ const BOARDING_PASSES = [
   }
 ];
 
-// PDF Templates
+// PDF Templates — formats + styles
 const PDF_TEMPLATES = [
   {
-    id: 'classique',
-    name: 'Classique',
-    desc: 'Mise en page epuree et elegante',
-    price: null,
-    priceLabel: 'Inclus',
-    preview: 'linear-gradient(135deg, #FAF7F2 0%, #F5F0E8 100%)',
-    accent: '#1A1410',
-    style: 'clean'
-  },
-  {
-    id: 'magazine',
-    name: 'Magazine',
-    desc: 'Style editorial, grandes photos',
-    price: null,
-    priceLabel: 'Inclus',
-    preview: 'linear-gradient(135deg, #E8E0D4 0%, #D4C4B0 100%)',
-    accent: '#C8864A',
-    style: 'editorial'
-  },
-  {
-    id: 'aventure',
-    name: 'Aventure',
-    desc: 'Tons chauds, esprit carnet de route',
-    price: null,
-    priceLabel: 'Inclus',
-    preview: 'linear-gradient(135deg, #E8D9C0 0%, #C8864A 100%)',
-    accent: '#7A8C6E',
-    style: 'rustic'
-  },
-  {
-    id: 'premium-luxe',
-    name: 'Premium Luxe',
-    desc: 'Accents dores, photos pleine page',
-    price: 4.99,
-    priceLabel: '4,99 EUR',
+    id: 'landscape-magazine',
+    name: 'Magazine Paysage',
+    desc: 'A4 paysage, doubles pages photos',
+    format: 'a4', orientation: 'landscape',
+    price: null, priceLabel: 'Gratuit',
     preview: 'linear-gradient(135deg, #1A1410 0%, #3A2A1A 100%)',
-    accent: '#D4A866',
-    style: 'luxe'
+    icon: '📰'
   },
   {
-    id: 'premium-editorial',
-    name: 'Premium Editorial',
-    desc: 'Style journal, colonnes de texte',
-    price: 4.99,
-    priceLabel: '4,99 EUR',
+    id: 'landscape-photobook',
+    name: 'Livre Photo',
+    desc: 'A4 paysage, photos dominantes',
+    format: 'a4', orientation: 'landscape',
+    price: null, priceLabel: 'Gratuit',
+    preview: 'linear-gradient(135deg, #FAF7F2 0%, #E8D9C0 100%)',
+    icon: '📷'
+  },
+  {
+    id: 'a5-elegant',
+    name: 'A5 Elegant',
+    desc: 'A5 portrait, mise en page classique',
+    format: 'a5', orientation: 'portrait',
+    price: null, priceLabel: 'Gratuit',
     preview: 'linear-gradient(135deg, #F5F0E8 0%, #E0D8CC 100%)',
-    accent: '#1A1410',
-    style: 'newspaper'
+    icon: '📖'
+  },
+  {
+    id: 'landscape-premium',
+    name: 'Premium Voyage',
+    desc: 'A4 paysage, design luxe noir & or',
+    format: 'a4', orientation: 'landscape',
+    price: 4.99, priceLabel: '4,99 EUR',
+    preview: 'linear-gradient(135deg, #0D0A08 0%, #1A1410 100%)',
+    icon: '✨'
+  },
+  {
+    id: 'a5-carnet',
+    name: 'Carnet de Route',
+    desc: 'A5 portrait, esprit journal intime',
+    format: 'a5', orientation: 'portrait',
+    price: 2.99, priceLabel: '2,99 EUR',
+    preview: 'linear-gradient(135deg, #E8D9C0 0%, #C8864A 100%)',
+    icon: '📝'
+  },
+  {
+    id: 'square',
+    name: 'Carre Instagram',
+    desc: '21x21cm, ideal pour impression',
+    format: [210,210], orientation: 'portrait',
+    price: 4.99, priceLabel: '4,99 EUR',
+    preview: 'linear-gradient(135deg, #E8E0D4 0%, #C4B8A8 100%)',
+    icon: '⬜'
   }
 ];
 
