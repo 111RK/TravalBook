@@ -103,9 +103,27 @@ function openGallery(vid,ci){
   const sel=ch.photos.filter(p=>p.on).length;
   g.innerHTML=`
     <div class="gal-head"><div><div class="gal-title">${ch.day} — Photos</div><div class="gal-sub">${sel} sélectionnées sur ${ch.photos.length}</div></div><button class="gal-ok" onclick="closeGallery(${vid})">OK</button></div>
-    <div class="gal-grid">${ch.photos.map((p,pi)=>`<div class="gal-ph ${p.on?'on':''}" style="background-image:url('${p.url}')" onclick="togGal(${vid},${ci},${pi})"><div class="gal-ck">${p.on?'✓':''}</div></div>`).join('')}</div>
-    <div class="gal-add"><button onclick="addPhoto(${vid},${ci})"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Importer des photos</button></div>`;
+    <div class="gal-grid" id="gal-grid">${ch.photos.map((p,pi)=>`<div class="gal-ph ${p.on?'on':''}" style="background-image:url('${p.url}')" onclick="togGal(${vid},${ci},${pi})"><div class="gal-ck">${p.on?'✓':''}</div></div>`).join('')}</div>
+    <div class="gal-add">
+      <div class="gal-search-row" style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" placeholder="Rechercher sur Pexels..." id="gal-search" style="flex:1;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:24px;color:var(--ink);font:400 14px var(--sans);outline:none">
+        <button onclick="galSearch(${vid},${ci})" style="padding:12px 18px;background:var(--accent);color:#fff;border:none;border-radius:24px;font:500 13px var(--sans);cursor:pointer">Chercher</button>
+      </div>
+      <button onclick="addPhoto(${vid},${ci})"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Importer depuis l'appareil</button>
+    </div>`;
   requestAnimationFrame(()=>g.classList.add('show'));
+}
+
+async function galSearch(vid,ci){
+  const q=document.getElementById('gal-search').value.trim();if(!q)return;
+  const btn=document.querySelector('.gal-add button:last-child');
+  showToast('Recherche en cours...');
+  const photos=await searchPhotos(q);
+  if(!photos.length){showToast('Aucune photo trouvée');return}
+  const v=VOYAGES.find(x=>x.id===vid);
+  photos.forEach(p=>{v.chapters[ci].photos.push({url:p.url,thumb:p.thumb,on:0})});
+  showToast(photos.length+' photos ajoutées');
+  openGallery(vid,ci);
 }
 function togGal(vid,ci,pi){
   VOYAGES.find(x=>x.id===vid).chapters[ci].photos[pi].on^=1;openGallery(vid,ci);
@@ -227,8 +245,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   const dm=document.getElementById('dark-mode-toggle');if(dm)dm.addEventListener('change',toggleTheme);
   updateClock();setInterval(updateClock,30000);
   renderTrips();
-  // Splash photo
+  // Splash photo (fallback, will be replaced by Pexels)
   document.getElementById('splash-photo').style.backgroundImage=`url('${IMG.splash}')`;
+  // Fetch real photos from Pexels API
+  fetchAllPhotos().then(()=>{ console.log('Pexels photos loaded'); });
   // Map lazy
   new MutationObserver(()=>{if(document.getElementById('screen-map').classList.contains('active'))loadMap()}).observe(document.getElementById('screen-map'),{attributes:true,attributeFilter:['class']});
   // Chat enter
