@@ -365,42 +365,171 @@ function generatePhotoBookHtml(v, tpl, S) {
   .pb-back-text{font:400 11px ${S.bodyFont};color:rgba(255,255,255,.45);line-height:1.7;margin-top:18px}
 
   /* TOOLBAR */
-  .toolbar{position:fixed;bottom:0;left:0;right:0;background:#1a1a1a;padding:14px 20px;display:flex;gap:10px;justify-content:center;z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,.3)}
-  .toolbar button{padding:12px 24px;border:none;border-radius:8px;font:600 14px ${S.bodyFont};cursor:pointer;transition:all .2s}
+  .toolbar{position:fixed;bottom:0;left:0;right:0;background:#1a1a1a;padding:14px 20px;display:flex;gap:10px;justify-content:center;align-items:center;z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,.3)}
+  .toolbar button{padding:12px 24px;border:none;border-radius:8px;font:600 14px ${S.bodyFont};cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
   .btn-print{background:${C.accent};color:white}
   .btn-print:hover{opacity:.85}
   .btn-pdf{background:#c8864a;color:white}
   .btn-pdf:hover{opacity:.85}
-  @media print{.toolbar{display:none!important}body{background:white}.pb-page{margin:0;box-shadow:none}}
+  .btn-flip{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white}
+  .btn-flip:hover{opacity:.85}
+
+  /* ===== FLIPBOOK OVERLAY ===== */
+  #flipbook-overlay{position:fixed;inset:0;background:#1a1a1a;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:1000}
+  #flipbook-overlay.active{display:flex}
+  #flipbook-container{position:relative}
+  .stf__parent{box-shadow:0 10px 60px rgba(0,0,0,.5)}
+  .fb-toolbar{position:fixed;bottom:0;left:0;right:0;background:rgba(20,20,20,.95);backdrop-filter:blur(10px);padding:12px 20px;display:flex;align-items:center;justify-content:center;gap:12px;z-index:1001;border-top:1px solid rgba(255,255,255,.1)}
+  .fb-btn{padding:10px 20px;border:none;border-radius:8px;font:600 13px ${S.bodyFont};cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+  .fb-btn:hover{opacity:.85;transform:translateY(-1px)}
+  .fb-nav{background:rgba(255,255,255,.1);color:white;font-size:20px;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;padding:0}
+  .fb-nav:hover{background:rgba(255,255,255,.2)}
+  .fb-close{position:fixed;top:16px;right:16px;background:rgba(255,255,255,.1);color:white;border:none;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;z-index:1002;display:flex;align-items:center;justify-content:center}
+  .fb-close:hover{background:rgba(255,255,255,.2)}
+  .fb-title{position:fixed;top:16px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.6);font:500 14px ${S.bodyFont};letter-spacing:2px;z-index:1002}
+  .fb-page-info{color:rgba(255,255,255,.5);font:400 12px ${S.bodyFont};min-width:80px;text-align:center}
+  .fb-loading{color:rgba(255,255,255,.4);font:400 14px ${S.bodyFont};text-align:center}
+
+  @media print{.toolbar,.fb-toolbar,#flipbook-overlay,.fb-close,.fb-title{display:none!important}body{background:white}.pb-page{margin:0;box-shadow:none;page-break-after:always}}
 </style></head><body>
 
 ${pages}
 
-<div class="toolbar">
-  <button class="btn-print" onclick="window.print()">Imprimer</button>
-  <button class="btn-pdf" onclick="savePdf()">Convertir en PDF</button>
+<!-- Normal toolbar -->
+<div class="toolbar" id="normal-toolbar">
+  <button class="btn-flip" onclick="openFlipbook()">&#128214; Feuilleter</button>
+  <button class="btn-print" onclick="window.print()">&#128424; Imprimer</button>
+  <button class="btn-pdf" onclick="savePdf()">&#128196; Convertir en PDF</button>
 </div>
 
+<!-- Flipbook overlay (hidden by default) -->
+<div id="flipbook-overlay">
+  <div class="fb-title">TravelBook — ${v.name}</div>
+  <button class="fb-close" onclick="closeFlipbook()" title="Fermer">&times;</button>
+  <div id="flipbook-container"></div>
+  <div class="fb-loading" id="fb-loading">Chargement du livre...</div>
+  <div class="fb-toolbar" id="fb-toolbar" style="display:none">
+    <button class="fb-btn fb-nav" onclick="flipbook.flipPrev()">&#8249;</button>
+    <span class="fb-page-info" id="fb-page-info">— / —</span>
+    <button class="fb-btn fb-nav" onclick="flipbook.flipNext()">&#8250;</button>
+    <span style="width:1px;height:28px;background:rgba(255,255,255,.15)"></span>
+    <button class="fb-btn" style="background:rgba(255,255,255,.1);color:white" onclick="toggleFullscreen()">&#x26F6; Plein écran</button>
+    <button class="fb-btn" style="background:white;color:#1a1a1a" onclick="closeFlipbook();window.print()">&#128424; Imprimer</button>
+    <button class="fb-btn" style="background:#c8864a;color:white" onclick="savePdfFromFlip()">&#128196; PDF</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 <script>
+let flipbook = null;
+const pageImages = [];
+let flipbookReady = false;
+
+// Normal PDF save (from scroll view)
 async function savePdf() {
   const btn = document.querySelector('.btn-pdf');
   btn.textContent = 'Conversion...'; btn.disabled = true;
-  document.querySelector('.toolbar').style.display = 'none';
-  const pages = document.querySelectorAll('.pb-page');
+  document.getElementById('normal-toolbar').style.display = 'none';
+  const allPages = document.querySelectorAll('.pb-page');
   const {jsPDF} = window.jspdf;
   const pdf = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   const W = pdf.internal.pageSize.getWidth(), H = pdf.internal.pageSize.getHeight();
-  for (let i = 0; i < pages.length; i++) {
+  for (let i = 0; i < allPages.length; i++) {
     if (i > 0) pdf.addPage();
     try {
-      const c = await html2canvas(pages[i], {scale:2, useCORS:true, allowTaint:true, width:pages[i].offsetWidth, height:pages[i].offsetHeight});
+      const c = await html2canvas(allPages[i], {scale:2, useCORS:true, allowTaint:true, width:allPages[i].offsetWidth, height:allPages[i].offsetHeight});
       pdf.addImage(c.toDataURL('image/jpeg',.85), 'JPEG', 0, 0, W, H);
     } catch(e) { console.warn('Page '+i+' skip:', e); }
   }
   pdf.save('TravelBook-${v.name.replace(/[^a-zA-Z0-9]/g, '')}.pdf');
-  document.querySelector('.toolbar').style.display = 'flex';
+  document.getElementById('normal-toolbar').style.display = 'flex';
   btn.textContent = 'Convertir en PDF'; btn.disabled = false;
 }
+
+// PDF save from flipbook (uses cached images)
+async function savePdfFromFlip() {
+  if (!pageImages.length) return;
+  const {jsPDF} = window.jspdf;
+  const pdf = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W = pdf.internal.pageSize.getWidth(), H = pdf.internal.pageSize.getHeight();
+  for (let i = 0; i < pageImages.length; i++) {
+    if (i > 0) pdf.addPage();
+    pdf.addImage(pageImages[i], 'JPEG', 0, 0, W, H);
+  }
+  pdf.save('TravelBook-${v.name.replace(/[^a-zA-Z0-9]/g, '')}.pdf');
+}
+
+// Open flipbook overlay
+async function openFlipbook() {
+  const overlay = document.getElementById('flipbook-overlay');
+  overlay.classList.add('active');
+  document.getElementById('normal-toolbar').style.display = 'none';
+
+  if (flipbookReady) {
+    document.getElementById('fb-toolbar').style.display = 'flex';
+    return;
+  }
+
+  const sourcePages = document.querySelectorAll('.pb-page');
+  const container = document.getElementById('flipbook-container');
+  const loading = document.getElementById('fb-loading');
+
+  for (let i = 0; i < sourcePages.length; i++) {
+    loading.textContent = 'Rendu page ' + (i + 1) + '/' + sourcePages.length + '...';
+    try {
+      const canvas = await html2canvas(sourcePages[i], {
+        scale: 1.5, useCORS: true, allowTaint: true,
+        width: sourcePages[i].offsetWidth, height: sourcePages[i].offsetHeight
+      });
+      pageImages.push(canvas.toDataURL('image/jpeg', 0.88));
+    } catch(e) {
+      const c = document.createElement('canvas'); c.width = 595; c.height = 842;
+      const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0,0,595,842);
+      pageImages.push(c.toDataURL('image/jpeg', 0.88));
+    }
+  }
+
+  loading.style.display = 'none';
+
+  const viewH = window.innerHeight - 100;
+  const pageH = viewH;
+  const pageW = Math.round(pageH * 0.707);
+
+  flipbook = new St.PageFlip(container, {
+    width: pageW, height: pageH, size: 'fixed',
+    minWidth: 300, maxWidth: 800, minHeight: 420, maxHeight: 1130,
+    showCover: true, maxShadowOpacity: 0.5, mobileScrollSupport: false,
+    flippingTime: 800, useMouseEvents: true, swipeDistance: 30, drawShadow: true, autoSize: true
+  });
+
+  flipbook.loadFromImages(pageImages);
+  flipbook.on('flip', (e) => {
+    document.getElementById('fb-page-info').textContent = (e.data + 1) + ' / ' + flipbook.getPageCount();
+  });
+  document.getElementById('fb-page-info').textContent = '1 / ' + flipbook.getPageCount();
+  document.getElementById('fb-toolbar').style.display = 'flex';
+  flipbookReady = true;
+}
+
+function closeFlipbook() {
+  document.getElementById('flipbook-overlay').classList.remove('active');
+  document.getElementById('normal-toolbar').style.display = 'flex';
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+
+document.addEventListener('keydown', (e) => {
+  if (!document.getElementById('flipbook-overlay').classList.contains('active')) return;
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); flipbook.flipNext(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); flipbook.flipPrev(); }
+  if (e.key === 'Escape') closeFlipbook();
+  if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+});
 <\/script>
 </body></html>`;
 }
