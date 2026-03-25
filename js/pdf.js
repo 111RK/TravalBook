@@ -171,19 +171,27 @@ function generatePhotoBookHtml(v, tpl, S) {
 
     // --- SPREAD: Double-page photo (left half + right half of same image) ---
     if (allPhotos[0]) {
+      const histSnippet = ch.history ? ch.history.summary.split(/(?<=[.!?])\s+/).slice(0, 2).join(' ') : '';
       pages += `
       <div class="pb-page pb-spread-left">
         <img src="${allPhotos[0]}" class="pb-spread-img pb-spread-img-left">
+        <div class="pb-spread-left-ov">
+          <div class="pb-spread-day">${ch.day.toUpperCase()}</div>
+          <h2 class="pb-spread-title">${ch.title}</h2>
+          <p class="pb-spread-subtitle">${ch.place.name} · ${ch.place.duration}</p>
+        </div>
       </div>
       <div class="pb-page pb-spread-right">
         <img src="${allPhotos[0]}" class="pb-spread-img pb-spread-img-right">
-        <div class="pb-spread-overlay">
-          <div class="pb-fullbleed-script">${ch.place.name}</div>
-          <div class="pb-fullbleed-caption">
-            <span class="pb-icon-loc">📍</span>
-            ${ch.place.address || ch.place.name}<br>
-            ${ch.day} · ${ch.place.duration}
+        <div class="pb-spread-right-ov">
+          <div class="pb-spread-place">${ch.place.name}</div>
+          <div class="pb-spread-stars">${'★'.repeat(Math.round(ch.place.rating))} ${ch.place.rating}</div>
+          ${histSnippet ? `<p class="pb-spread-history">${histSnippet}</p>` : ''}
+          <div class="pb-spread-quote">
+            <p>"${q.text}"</p>
+            <span>— ${q.attr}</span>
           </div>
+          <div class="pb-spread-loc">📍 ${ch.place.address || ch.place.name}</div>
         </div>
       </div>`;
     }
@@ -317,9 +325,21 @@ function generatePhotoBookHtml(v, tpl, S) {
   .pb-spread-img{position:absolute;top:0;height:100%;width:200%;object-fit:cover}
   .pb-spread-img-left{left:0}
   .pb-spread-img-right{right:0}
-  .pb-spread-overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:22mm;background:linear-gradient(to top,rgba(0,0,0,.4) 0%,transparent 40%)}
-  .pb-fullbleed-script{font:700 52px ${scriptFont};color:white;text-shadow:0 4px 25px rgba(0,0,0,.5);white-space:nowrap}
-  .pb-fullbleed-caption{font:400 9px ${S.bodyFont};color:rgba(255,255,255,.8);line-height:1.6;background:rgba(0,0,0,.3);padding:8px 14px;border-radius:4px;backdrop-filter:blur(4px);display:inline-block;margin-top:8px}
+  /* Spread left overlay: day + title at bottom-left */
+  .pb-spread-left-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.6) 0%,transparent 50%);display:flex;flex-direction:column;justify-content:flex-end;padding:16mm}
+  .pb-spread-day{font:600 10px ${S.bodyFont};color:${C.accent2 || '#ccc'};letter-spacing:4px;background:rgba(0,0,0,.4);padding:4px 12px;border-radius:3px;display:inline-block;margin-bottom:8px;backdrop-filter:blur(4px);align-self:flex-start}
+  .pb-spread-title{font:700 28px ${serifFont};color:white;text-shadow:0 3px 20px rgba(0,0,0,.5);line-height:1.2;margin-bottom:4px}
+  .pb-spread-subtitle{font:400 11px ${S.bodyFont};color:rgba(255,255,255,.7)}
+
+  /* Spread right overlay: place info + quote at bottom-right */
+  .pb-spread-right-ov{position:absolute;bottom:0;right:0;width:70%;padding:14mm;background:linear-gradient(to left,rgba(0,0,0,.65) 0%,rgba(0,0,0,.3) 70%,transparent 100%);display:flex;flex-direction:column;align-items:flex-end;text-align:right}
+  .pb-spread-place{font:700 18px ${S.bodyFont};color:white;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
+  .pb-spread-stars{font-size:12px;color:#c8a050;margin-bottom:8px}
+  .pb-spread-history{font:italic 400 10px ${serifFont};color:rgba(255,255,255,.75);line-height:1.6;margin-bottom:10px;max-width:90%}
+  .pb-spread-quote{border-right:2px solid rgba(255,255,255,.4);padding:8px 12px;margin-bottom:10px}
+  .pb-spread-quote p{font:italic 400 11px ${serifFont};color:rgba(255,255,255,.85);line-height:1.5;margin:0}
+  .pb-spread-quote span{font:400 9px ${S.bodyFont};color:rgba(255,255,255,.5);display:block;margin-top:4px}
+  .pb-spread-loc{font:400 9px ${S.bodyFont};color:rgba(255,255,255,.6)}
   .pb-icon-loc{margin-right:4px}
 
   /* ===== SPLIT LAYOUT ===== */
