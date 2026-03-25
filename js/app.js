@@ -218,7 +218,7 @@ function goToSwipe() {
   navigateTo('screen-swipe');
 }
 
-// Step 4 — Swipe validation
+// Step 4 — Swipe validation with drag animation
 function renderSwipe() {
   const z = document.getElementById('swipe-zone');
   if (swIdx >= SWIPE_PLACES.length) {
@@ -227,32 +227,93 @@ function renderSwipe() {
     return;
   }
   const p = SWIPE_PLACES[swIdx];
-  document.getElementById('swipe-count').textContent = `${swIdx + 1} / ${SWIPE_PLACES.length}`;
-  z.innerHTML = `
-    <div class="sw-card">
-      <div class="sw-img" style="background-image:url('${p.img}')"><div class="sw-dur">${p.duration}</div></div>
-      <div class="sw-body">
-        <div class="sw-name">${p.name}</div>
-        <div class="sw-addr">${p.address}</div>
-        <div><span class="sw-stars">${'*'.repeat(Math.round(p.rating))}</span> <span class="sw-rating">${p.rating} (${p.reviews.toLocaleString()})</span></div>
-      </div>
-    </div>`;
+  document.getElementById('swipe-count').textContent = (swIdx + 1) + ' / ' + SWIPE_PLACES.length;
+  z.innerHTML = '<div class="sw-card" id="sw-card">' +
+    '<div class="sw-label sw-label-yes">OUI</div>' +
+    '<div class="sw-label sw-label-no">NON</div>' +
+    '<div class="sw-img" style="background-image:url(\'' + p.img + '\')">' +
+    '<div class="sw-dur">' + p.duration + '</div></div>' +
+    '<div class="sw-body"><div class="sw-name">' + p.name + '</div>' +
+    '<div class="sw-addr">' + p.address + '</div>' +
+    '<div><span class="sw-stars">*****</span> ' +
+    '<span class="sw-rating">' + p.rating + ' (' + p.reviews.toLocaleString() + ')</span></div>' +
+    '</div></div>';
+  initDrag();
 }
 
-function swipeAction(d) {
-  console.log('swipeAction called, direction:', d, 'swIdx:', swIdx, 'total:', SWIPE_PLACES.length);
+function nextSwipe() {
   swIdx++;
-  console.log('new swIdx:', swIdx);
   renderSwipe();
-  console.log('renderSwipe done');
 }
 
-let tx = 0;
-document.addEventListener('touchstart', e => { if (cur === 'screen-swipe') tx = e.touches[0].clientX; });
-document.addEventListener('touchend', e => {
-  if (cur !== 'screen-swipe') return;
-  const diff = e.changedTouches[0].clientX - tx;
-  if (Math.abs(diff) > 60) swipeAction(diff > 0 ? 'right' : 'left');
+// Drag logic
+function initDrag() {
+  const card = document.getElementById('sw-card');
+  if (!card) return;
+  let startX = 0, currentX = 0, dragging = false;
+
+  function onStart(x) { startX = x; currentX = 0; dragging = true; }
+  function onMove(x) {
+    if (!dragging) return;
+    currentX = x - startX;
+    const rot = currentX * 0.08;
+    card.style.transform = 'translateX(' + currentX + 'px) rotate(' + rot + 'deg)';
+    card.style.transition = 'none';
+    // Show labels
+    const yesLabel = card.querySelector('.sw-label-yes');
+    const noLabel = card.querySelector('.sw-label-no');
+    if (yesLabel) yesLabel.style.opacity = Math.min(currentX / 80, 1);
+    if (noLabel) noLabel.style.opacity = Math.min(-currentX / 80, 1);
+  }
+  function onEnd() {
+    if (!dragging) return;
+    dragging = false;
+    if (Math.abs(currentX) > 80) {
+      // Fling out
+      const dir = currentX > 0 ? 1 : -1;
+      card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+      card.style.transform = 'translateX(' + (dir * 400) + 'px) rotate(' + (dir * 20) + 'deg)';
+      card.style.opacity = '0';
+      setTimeout(nextSwipe, 300);
+    } else {
+      // Snap back
+      card.style.transition = 'transform 0.3s ease';
+      card.style.transform = 'translateX(0) rotate(0)';
+      const yesLabel = card.querySelector('.sw-label-yes');
+      const noLabel = card.querySelector('.sw-label-no');
+      if (yesLabel) yesLabel.style.opacity = 0;
+      if (noLabel) noLabel.style.opacity = 0;
+    }
+  }
+
+  // Mouse
+  card.addEventListener('mousedown', e => { e.preventDefault(); onStart(e.clientX); });
+  document.addEventListener('mousemove', e => onMove(e.clientX));
+  document.addEventListener('mouseup', onEnd);
+  // Touch
+  card.addEventListener('touchstart', e => onStart(e.touches[0].clientX), { passive: true });
+  document.addEventListener('touchmove', e => onMove(e.touches[0].clientX), { passive: true });
+  document.addEventListener('touchend', onEnd);
+}
+
+// Buttons (addEventListener, not inline onclick)
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('btn-swipe-yes').addEventListener('click', () => {
+    const card = document.getElementById('sw-card');
+    if (!card) return;
+    card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+    card.style.transform = 'translateX(400px) rotate(20deg)';
+    card.style.opacity = '0';
+    setTimeout(nextSwipe, 300);
+  });
+  document.getElementById('btn-swipe-no').addEventListener('click', () => {
+    const card = document.getElementById('sw-card');
+    if (!card) return;
+    card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+    card.style.transform = 'translateX(-400px) rotate(-20deg)';
+    card.style.opacity = '0';
+    setTimeout(nextSwipe, 300);
+  });
 });
 
 // Step 5 — Generating animation

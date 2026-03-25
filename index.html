@@ -206,10 +206,11 @@
         </div>
         <div class="step-bar"><div class="step-bar-fill" style="width:80%"></div></div>
         <p class="swipe-count" id="swipe-count">1 / 5</p>
+        <p style="text-align:center;font:400 11px var(--sans);color:var(--ink3);margin-bottom:8px">Glissez a droite pour accepter, a gauche pour refuser</p>
         <div class="swipe-zone" id="swipe-zone"></div>
         <div class="swipe-actions">
-          <button class="swipe-no" onclick="swipeAction('left')"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-          <button class="swipe-yes" onclick="swipeAction('right')"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg></button>
+          <button class="swipe-no" id="btn-swipe-no" type="button"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+          <button class="swipe-yes" id="btn-swipe-yes" type="button"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg></button>
         </div>
       </div>
 
