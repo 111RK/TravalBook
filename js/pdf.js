@@ -95,22 +95,28 @@ function generatePhotoBookHtml(v, tpl, S) {
   const quotes = QUOTES[v.country] || [{text:"Le voyage est la seule chose qu'on achète qui nous rend plus riche.",attr:"Anonyme"}];
   const gSel = (ch) => ch.photos ? ch.photos.filter(p => p.on) : [];
 
+  // Build cover info
+  const participants = ['Raph', ...(v.companions || [])].join(', ');
+  const datesParts = (v.dates || '').match(/(\d[\w.]*)\s*[-–]\s*(\d[\w.\s]*\d{4})/);
+  const coverDateLine = datesParts ? 'du ' + datesParts[1] + ' au ' + datesParts[2] : v.dates || '';
+
   let pages = '';
 
-  // ===== PAGE 1: COVER — White frame, "PHOTO BOOK" header, Travel script =====
+  // ===== PAGE 1: COVER =====
   pages += `
   <div class="pb-page pb-cover">
     <div class="pb-cover-inner">
       <div class="pb-cover-header">
         <span class="pb-arrow">›››› </span>
-        <span class="pb-header-label">WORLDTRAVEL</span>
+        <span class="pb-header-label">TRAVELBOOK</span>
       </div>
-      <div class="pb-cover-title">PHOTO BOOK</div>
+      <div class="pb-cover-title">Séjour ${v.country || v.name}</div>
       <div class="pb-cover-photo">
         <img src="${v.cover}" alt="">
         <div class="pb-cover-script">${v.name}</div>
       </div>
-      <div class="pb-cover-continents">${v.country ? v.country.toUpperCase() : 'EUROPE'} | ${v.dates || ''}</div>
+      <div class="pb-cover-dates">${coverDateLine}</div>
+      <div class="pb-cover-participants">${participants}</div>
     </div>
   </div>`;
 
@@ -276,11 +282,12 @@ function generatePhotoBookHtml(v, tpl, S) {
   .pb-cover-header{display:flex;align-items:center;gap:6px;align-self:flex-end;margin-bottom:8px}
   .pb-arrow{font:700 12px ${S.bodyFont};color:${C.accent};letter-spacing:-2px}
   .pb-header-label{font:500 9px ${S.bodyFont};color:${C.muted};letter-spacing:3px;text-transform:uppercase}
-  .pb-cover-title{font:800 42px ${S.bodyFont};color:${C.accent};letter-spacing:8px;text-transform:uppercase;margin:12px 0 20px;text-align:center}
+  .pb-cover-title{font:700 36px ${scriptFont};color:${C.accent};margin:12px 0 16px;text-align:center;line-height:1.3}
   .pb-cover-photo{position:relative;width:100%;flex:1;overflow:hidden;border-radius:2px;box-shadow:0 8px 40px rgba(0,0,0,.15)}
   .pb-cover-photo img{width:100%;height:100%;object-fit:cover}
   .pb-cover-script{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font:700 64px ${scriptFont};color:white;text-shadow:0 4px 30px rgba(0,0,0,.5);white-space:nowrap}
-  .pb-cover-continents{font:500 9px ${S.bodyFont};color:${C.muted};letter-spacing:3px;text-transform:uppercase;margin-top:14px;text-align:center}
+  .pb-cover-dates{font:500 11px ${S.bodyFont};color:${C.muted};letter-spacing:2px;margin-top:12px;text-align:center}
+  .pb-cover-participants{font:600 13px ${scriptFont};color:${C.accent};margin-top:6px;text-align:center;letter-spacing:1px}
 
   /* ===== CHAPTER DIVIDER ===== */
   .pb-divider{display:flex;align-items:center;justify-content:center}
