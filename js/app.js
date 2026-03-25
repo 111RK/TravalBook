@@ -1,726 +1,236 @@
-// ============================================
-// TravelBook — App Logic
-// ============================================
+// TravelBook v3 — App Logic
+let cur='screen-splash',curVoyage=null,swIdx=0,hist=['screen-splash'];
+const NAV_SCREENS=['screen-home','screen-map','screen-profile'];
 
-let currentScreen = 'screen-splash';
-let currentVoyageId = null;
-let swipeIndex = 0;
-let screenHistory = ['screen-splash'];
+// Theme
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('tb-theme',t);const tg=document.getElementById('dark-mode-toggle');if(tg)tg.checked=t==='dark'}
+function toggleTheme(){setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark')}
 
-const NAV_SCREENS = ['screen-home', 'screen-map', 'screen-profile'];
-
-// ============================================
-// Theme (light/dark)
-// ============================================
-
-function setTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem('tb-theme', theme);
-  const toggle = document.getElementById('dark-mode-toggle');
-  if (toggle) toggle.checked = theme === 'dark';
+// Nav
+function navigateTo(id,h=true){
+  const a=document.getElementById(cur),b=document.getElementById(id);
+  if(!a||!b||id===cur)return;
+  a.classList.remove('active');a.classList.add('slide-out');b.classList.add('slide-in');
+  setTimeout(()=>{a.classList.remove('slide-out');b.classList.remove('slide-in');b.classList.add('active')},350);
+  if(h)hist.push(id);cur=id;
+  const nav=document.getElementById('nav');
+  NAV_SCREENS.includes(id)?nav.classList.remove('hidden'):nav.classList.add('hidden');
+  if(NAV_SCREENS.includes(id))document.querySelectorAll('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.screen===id));
+}
+function navTo(id){
+  if(id===cur)return;
+  document.getElementById(cur).classList.remove('active');
+  document.getElementById(id).classList.add('active');
+  cur=id;hist.push(id);
+  document.querySelectorAll('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.screen===id));
 }
 
-function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme') || 'light';
-  setTheme(current === 'dark' ? 'light' : 'dark');
-}
+// Auth
+function doLogin(){showToast('Connexion réussie');setTimeout(()=>navigateTo('screen-home'),400)}
+function doSignup(){showToast('Compte créé');setTimeout(()=>navigateTo('screen-home'),400)}
+function logout(){navigateTo('screen-splash');hist=['screen-splash']}
 
-// ============================================
-// Navigation
-// ============================================
-
-function navigateTo(screenId, addToHistory = true) {
-  const current = document.getElementById(currentScreen);
-  const next = document.getElementById(screenId);
-  if (!current || !next || screenId === currentScreen) return;
-
-  current.classList.remove('active');
-  current.classList.add('slide-out');
-  next.classList.add('slide-in');
-
-  setTimeout(() => {
-    current.classList.remove('slide-out');
-    next.classList.remove('slide-in');
-    next.classList.add('active');
-  }, 350);
-
-  if (addToHistory) screenHistory.push(screenId);
-  currentScreen = screenId;
-
-  const nav = document.getElementById('bottom-nav');
-  if (NAV_SCREENS.includes(screenId)) {
-    nav.classList.remove('hidden');
-    updateNavActive(screenId);
-  } else {
-    nav.classList.add('hidden');
-  }
-}
-
-function navTo(screenId) {
-  if (screenId === currentScreen) return;
-  const current = document.getElementById(currentScreen);
-  const next = document.getElementById(screenId);
-  if (!current || !next) return;
-
-  current.classList.remove('active');
-  next.classList.add('active');
-  currentScreen = screenId;
-  screenHistory.push(screenId);
-  updateNavActive(screenId);
-}
-
-function updateNavActive(screenId) {
-  document.querySelectorAll('.nav-item').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.screen === screenId);
-  });
-}
-
-function goBack() {
-  if (screenHistory.length > 1) {
-    screenHistory.pop();
-    navigateTo(screenHistory[screenHistory.length - 1], false);
-  }
-}
-
-// ============================================
-// Auth (demo)
-// ============================================
-
-function doLogin() {
-  showToast('Connexion r\u00e9ussie !');
-  setTimeout(() => navigateTo('screen-home'), 500);
-}
-
-function doSignup() {
-  showToast('Compte cr\u00e9\u00e9 !');
-  setTimeout(() => navigateTo('screen-home'), 500);
-}
-
-function logout() {
-  navigateTo('screen-splash');
-  screenHistory = ['screen-splash'];
-}
-
-// ============================================
-// Home — Voyage List
-// ============================================
-
-function renderVoyageList() {
-  const list = document.getElementById('voyage-list');
-  list.innerHTML = VOYAGES.map(v => `
-    <div class="voyage-card" onclick="openVoyage(${v.id})">
-      <div class="voyage-card-img" style="background-image:url('${v.coverImg}')">
-        <span class="voyage-card-badge ${v.badge === 'ready' ? 'badge-ready' : 'badge-pdf'}">
-          ${v.badge === 'ready' ? 'Carnet pr\u00eat' : 'PDF export\u00e9'}
-        </span>
+// Home
+function renderTrips(){
+  document.getElementById('trip-list').innerHTML=VOYAGES.map(v=>`
+    <div class="trip-card" onclick="openVoyage(${v.id})">
+      <div class="trip-img" style="background-image:url('${v.cover}')">
+        <span class="trip-badge ${v.badge==='ok'?'ok':'pdf'}">${v.badge==='ok'?'Carnet prêt':'PDF exporté'}</span>
       </div>
-      <div class="voyage-card-body">
-        <div class="voyage-card-title">${v.name}</div>
-        <div class="voyage-card-meta">${v.country} \u00b7 ${v.dates}</div>
-        <div class="voyage-card-footer">
-          <div class="voyage-companions">
-            ${v.companions.map(c => `<div class="voyage-companion">${c[0]}</div>`).join('')}
-          </div>
-          <div class="voyage-card-stats">${v.stats.photos} photos \u00b7 ${v.stats.lieux} lieux</div>
+      <div class="trip-info">
+        <div class="trip-name">${v.name}</div>
+        <div class="trip-meta">${v.country} · ${v.dates}</div>
+        <div class="trip-foot">
+          <div class="trip-avatars">${v.companions.map(c=>`<div class="trip-av">${c[0]}</div>`).join('')}</div>
+          <div class="trip-stat">${v.stats.photos} photos · ${v.stats.lieux} lieux</div>
         </div>
       </div>
     </div>
   `).join('');
 }
 
-// ============================================
-// Open Voyage (Carnet)
-// ============================================
+// Carnet
+function openVoyage(id){
+  const v=VOYAGES.find(x=>x.id===id);if(!v)return;curVoyage=id;
+  document.getElementById('carnet-cover').style.backgroundImage=`url('${v.cover}')`;
+  document.getElementById('carnet-h').textContent=v.name;
+  document.getElementById('carnet-sub').textContent=`${v.country} — ${v.days} jours`;
+  document.getElementById('carnet-stats').innerHTML=
+    [{v:v.stats.photos,l:'Photos'},{v:v.stats.lieux,l:'Lieux'},{v:v.stats.mots.toLocaleString(),l:'Mots'},{v:v.stats.temp,l:'Moy.'}]
+    .map(s=>`<div class="c-stat"><b>${s.v}</b><small>${s.l}</small></div>`).join('');
 
-function openVoyage(id) {
-  const v = VOYAGES.find(x => x.id === id);
-  if (!v) return;
-  currentVoyageId = id;
-
-  // Cover with real image
-  const cover = document.getElementById('carnet-cover');
-  cover.style.backgroundImage = `url('${v.coverImg}')`;
-  document.getElementById('carnet-title').textContent = v.name;
-  document.getElementById('carnet-subtitle').textContent = `${v.country} \u2014 ${v.days} jours`;
-
-  // Stats
-  document.getElementById('carnet-stats').innerHTML = `
-    <div class="carnet-stat">
-      <span class="carnet-stat-val">${v.stats.photos}</span>
-      <span class="carnet-stat-lbl">Photos</span>
-    </div>
-    <div class="carnet-stat">
-      <span class="carnet-stat-val">${v.stats.lieux}</span>
-      <span class="carnet-stat-lbl">Lieux</span>
-    </div>
-    <div class="carnet-stat">
-      <span class="carnet-stat-val">${v.stats.mots.toLocaleString()}</span>
-      <span class="carnet-stat-lbl">Mots</span>
-    </div>
-    <div class="carnet-stat">
-      <span class="carnet-stat-val">${v.stats.temp}</span>
-      <span class="carnet-stat-lbl">Moy.</span>
-    </div>
-  `;
-
-  // Chapters with photos
-  document.getElementById('carnet-chapters').innerHTML = v.chapters.map((ch, ci) => {
-    const selectedPhotos = ch.photos ? ch.photos.filter(p => p.selected) : [];
-    const heroImg = selectedPhotos.length > 0 ? selectedPhotos[0].url : '';
-    const totalPhotos = ch.photos ? ch.photos.length : 0;
-    const selectedCount = selectedPhotos.length;
-
-    return `
-    <div class="chapter-card">
-      <div class="chapter-day">${ch.day}</div>
-      <div class="chapter-title">${ch.title}</div>
-      ${heroImg ? `<div class="chapter-img" style="background-image:url('${heroImg}')" onclick="viewPhoto('${heroImg}')"></div>` : ''}
-      ${ch.photos && ch.photos.length > 0 ? `
-      <div class="chapter-photos">
-        ${ch.photos.map((p, pi) => `
-          <div class="chapter-thumb ${p.selected ? 'selected' : ''}"
-               style="background-image:url('${p.url}')"
-               onclick="toggleChapterPhoto(${v.id}, ${ci}, ${pi})">
-            <div class="chapter-thumb-check">\u2713</div>
-          </div>
-        `).join('')}
-        <div class="chapter-thumb-add" onclick="openGallery(${v.id}, ${ci})">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-          Ajouter
+  document.getElementById('carnet-body').innerHTML=v.chapters.map((ch,ci)=>{
+    const sel=ch.photos?ch.photos.filter(p=>p.on):[];
+    const hero=sel.length?sel[0].url:'';
+    return `<div class="ch">
+      <div class="ch-day">${ch.day}</div>
+      <div class="ch-title">${ch.title}</div>
+      ${hero?`<div class="ch-img" style="background-image:url('${hero}')" onclick="viewPhoto('${hero}')"></div>`:''}
+      ${ch.photos&&ch.photos.length?`
+        <div class="ch-strip">
+          ${ch.photos.map((p,pi)=>`<div class="ch-thumb ${p.on?'on':''}" style="background-image:url('${p.url}')" onclick="togPhoto(${v.id},${ci},${pi})"><div class="ch-thumb-ck">✓</div></div>`).join('')}
+          <div class="ch-add" onclick="addPhoto(${v.id},${ci})">+</div>
         </div>
+        <div class="ch-sel" onclick="openGallery(${v.id},${ci})">${sel.length}/${ch.photos.length} photos — <b>Gérer</b></div>
+      `:''}
+      <div class="ch-text">${ch.text}</div>
+      <div class="ch-place">
+        <div style="flex:1"><div class="ch-pname">${ch.place.name}</div><div class="ch-pmeta">${ch.place.address} · ${ch.place.duration}</div></div>
+        <div class="ch-prating">${'★'.repeat(Math.round(ch.place.rating))} ${ch.place.rating}</div>
       </div>
-      <div style="font-size:11px;color:var(--text-muted);margin:-8px 0 12px;cursor:pointer" onclick="openGallery(${v.id}, ${ci})">
-        ${selectedCount}/${totalPhotos} photos s\u00e9lectionn\u00e9es \u2014 <span style="color:var(--primary)">G\u00e9rer</span>
-      </div>
-      ` : ''}
-      <div class="chapter-text">${ch.text}</div>
-      <div class="chapter-place">
-        <div class="chapter-place-info">
-          <div class="chapter-place-name">${ch.place.name}</div>
-          <div class="chapter-place-meta">${ch.place.address} \u00b7 ${ch.place.duration}</div>
-        </div>
-        <div class="chapter-place-rating">${'\u2605'.repeat(Math.round(ch.place.rating))} ${ch.place.rating}</div>
-      </div>
-    </div>
-    `;
+    </div>`;
   }).join('');
 
-  // PDF info
-  document.getElementById('pdf-title').textContent = v.name;
-  document.getElementById('pdf-dates').textContent = v.dates;
-  const pdfCover = document.querySelector('.pdf-cover-img');
-  if (pdfCover) {
-    pdfCover.style.backgroundImage = `url('${v.coverImg}')`;
-    pdfCover.style.backgroundSize = 'cover';
-    pdfCover.style.backgroundPosition = 'center';
-  }
+  // PDF
+  document.getElementById('pdf-mock-title').textContent=v.name;
+  document.getElementById('pdf-mock-date').textContent=v.dates;
+  document.getElementById('pdf-mock-cover').style.backgroundImage=`url('${v.cover}')`;
+  document.getElementById('pdf-mock-cover').style.backgroundSize='cover';
+  document.getElementById('pdf-mock-cover').style.backgroundPosition='center';
 
   navigateTo('screen-carnet');
 }
+function goBackFromPdf(){navigateTo(curVoyage?'screen-carnet':'screen-home')}
 
-function goBackFromPdf() {
-  if (currentVoyageId) {
-    navigateTo('screen-carnet');
-  } else {
-    navigateTo('screen-home');
-  }
+// Photos
+function togPhoto(vid,ci,pi){
+  const v=VOYAGES.find(x=>x.id===vid);v.chapters[ci].photos[pi].on=v.chapters[ci].photos[pi].on?0:1;openVoyage(vid);
+}
+function openGallery(vid,ci){
+  const v=VOYAGES.find(x=>x.id===vid);if(!v)return;const ch=v.chapters[ci];
+  let g=document.querySelector('.gal');
+  if(!g){g=document.createElement('div');g.className='gal';document.getElementById('app-content').appendChild(g)}
+  const sel=ch.photos.filter(p=>p.on).length;
+  g.innerHTML=`
+    <div class="gal-head"><div><div class="gal-title">${ch.day} — Photos</div><div class="gal-sub">${sel} sélectionnées sur ${ch.photos.length}</div></div><button class="gal-ok" onclick="closeGallery(${vid})">OK</button></div>
+    <div class="gal-grid">${ch.photos.map((p,pi)=>`<div class="gal-ph ${p.on?'on':''}" style="background-image:url('${p.url}')" onclick="togGal(${vid},${ci},${pi})"><div class="gal-ck">${p.on?'✓':''}</div></div>`).join('')}</div>
+    <div class="gal-add"><button onclick="addPhoto(${vid},${ci})"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Importer des photos</button></div>`;
+  requestAnimationFrame(()=>g.classList.add('show'));
+}
+function togGal(vid,ci,pi){
+  VOYAGES.find(x=>x.id===vid).chapters[ci].photos[pi].on^=1;openGallery(vid,ci);
+}
+function closeGallery(vid){
+  const g=document.querySelector('.gal');if(g)g.classList.remove('show');setTimeout(()=>openVoyage(vid),300);
+}
+function addPhoto(vid,ci){
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=true;
+  inp.onchange=e=>{
+    Array.from(e.target.files).forEach(f=>{
+      VOYAGES.find(x=>x.id===vid).chapters[ci].photos.push({url:URL.createObjectURL(f),on:1});
+    });
+    if(e.target.files.length){showToast(e.target.files.length+' photo(s) ajoutée(s)');openGallery(vid,ci)}
+  };inp.click();
+}
+function viewPhoto(url){
+  let v=document.querySelector('.pv');
+  if(!v){v=document.createElement('div');v.className='pv';v.onclick=()=>v.classList.remove('show');document.getElementById('app-content').appendChild(v)}
+  v.innerHTML=`<button class="pv-close" onclick="event.stopPropagation();this.parentElement.classList.remove('show')">✕</button><img src="${url}">`;
+  requestAnimationFrame(()=>v.classList.add('show'));
 }
 
-// ============================================
-// New Trip
-// ============================================
+// New trip
+function pickChip(el){el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));el.classList.add('active')}
+function createTrip(){swIdx=0;renderSwipe();navigateTo('screen-swipe')}
+function pickFmt(el){document.querySelectorAll('.pdf-fmt').forEach(f=>f.classList.remove('active'));el.classList.add('active')}
 
-function selectStyle(el) {
-  document.querySelectorAll('.style-chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-}
-
-function createTrip() {
-  swipeIndex = 0;
-  renderSwipeCard();
-  navigateTo('screen-swipe');
-}
-
-document.addEventListener('click', (e) => {
-  const chip = e.target.closest('.companion-chip');
-  if (chip && chip.closest('#companions-row')) {
-    chip.classList.toggle('selected');
-  }
-
-  const fmt = e.target.closest('.pdf-format');
-  if (fmt) {
-    document.querySelectorAll('.pdf-format').forEach(f => f.classList.remove('active'));
-    fmt.classList.add('active');
-  }
-});
-
-// ============================================
 // Swipe
-// ============================================
-
-function renderSwipeCard() {
-  const area = document.getElementById('swipe-area');
-  if (swipeIndex >= SWIPE_PLACES.length) {
-    navigateTo('screen-generating');
-    runGenerating();
-    return;
-  }
-
-  const place = SWIPE_PLACES[swipeIndex];
-  const progress = (swipeIndex / SWIPE_PLACES.length * 100);
-  document.getElementById('swipe-progress-bar').style.width = progress + '%';
-  document.getElementById('swipe-counter').textContent = `${swipeIndex + 1} / ${SWIPE_PLACES.length} lieux`;
-
-  area.innerHTML = `
-    <div class="swipe-card" id="current-swipe-card">
-      <div class="swipe-card-img" style="background-image:url('${place.img}')">
-        <div class="swipe-card-duration">${place.duration}</div>
-      </div>
-      <div class="swipe-card-body">
-        <div class="swipe-card-name">${place.name}</div>
-        <div class="swipe-card-address">${place.address}</div>
-        <div class="swipe-card-rating">
-          <span class="stars">${'\u2605'.repeat(Math.round(place.rating))}</span>
-          <span>${place.rating}</span>
-          <span class="rating-count">(${place.reviews.toLocaleString()} avis)</span>
-        </div>
-      </div>
-    </div>
-  `;
+function renderSwipe(){
+  const z=document.getElementById('swipe-zone');
+  if(swIdx>=SWIPE_PLACES.length){navigateTo('screen-generating');runGen();return}
+  const p=SWIPE_PLACES[swIdx];
+  document.getElementById('swipe-bar-fill').style.width=(swIdx/SWIPE_PLACES.length*100)+'%';
+  document.getElementById('swipe-count').textContent=`${swIdx+1} / ${SWIPE_PLACES.length}`;
+  z.innerHTML=`<div class="sw-card" id="sw-cur">
+    <div class="sw-img" style="background-image:url('${p.img}')"><div class="sw-dur">${p.duration}</div></div>
+    <div class="sw-body"><div class="sw-name">${p.name}</div><div class="sw-addr">${p.address}</div>
+    <div><span class="sw-stars">${'★'.repeat(Math.round(p.rating))}</span> <span class="sw-rating">${p.rating} (${p.reviews.toLocaleString()})</span></div></div></div>`;
 }
-
-function swipeAction(dir) {
-  const card = document.getElementById('current-swipe-card');
-  if (!card) return;
-  card.classList.add(dir === 'left' ? 'swiping-left' : 'swiping-right');
-  setTimeout(() => { swipeIndex++; renderSwipeCard(); }, 400);
+function swipeAction(d){
+  const c=document.getElementById('sw-cur');if(!c)return;
+  c.classList.add(d==='left'?'out-l':'out-r');setTimeout(()=>{swIdx++;renderSwipe()},400);
 }
+let tx=0;
+document.addEventListener('touchstart',e=>{if(cur==='screen-swipe')tx=e.touches[0].clientX});
+document.addEventListener('touchend',e=>{if(cur!=='screen-swipe')return;const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>60)swipeAction(d>0?'right':'left')});
 
-let touchStartX = 0;
-document.addEventListener('touchstart', (e) => {
-  if (currentScreen !== 'screen-swipe') return;
-  touchStartX = e.touches[0].clientX;
-});
-
-document.addEventListener('touchend', (e) => {
-  if (currentScreen !== 'screen-swipe') return;
-  const diff = e.changedTouches[0].clientX - touchStartX;
-  if (Math.abs(diff) > 60) swipeAction(diff > 0 ? 'right' : 'left');
-});
-
-// ============================================
 // Generating
-// ============================================
-
-function runGenerating() {
-  const steps = [
-    { id: 'gen-step-1', delay: 0 },
-    { id: 'gen-step-2', delay: 1200 },
-    { id: 'gen-step-3', delay: 2400 },
-    { id: 'gen-step-4', delay: 3600 }
-  ];
-
-  steps.forEach(s => {
-    const el = document.getElementById(s.id);
-    el.className = 'gen-step';
-    el.querySelector('span').className = 'gen-dot';
-  });
-
-  steps.forEach((step, i) => {
-    setTimeout(() => {
-      const el = document.getElementById(step.id);
-      if (i > 0) {
-        const prev = document.getElementById(steps[i-1].id);
-        prev.className = 'gen-step done';
-        prev.querySelector('span').className = 'gen-check';
-        prev.querySelector('span').innerHTML = '\u2713';
-      }
-      el.className = 'gen-step active';
-      el.querySelector('span').className = 'gen-spinner';
-      el.querySelector('span').innerHTML = '';
-    }, step.delay);
-  });
-
-  setTimeout(() => {
-    const last = document.getElementById(steps[steps.length-1].id);
-    last.className = 'gen-step done';
-    last.querySelector('span').className = 'gen-check';
-    last.querySelector('span').innerHTML = '\u2713';
-    setTimeout(() => openVoyage(1), 600);
-  }, 4800);
+function runGen(){
+  const steps=[{id:'gen-step-1',d:0},{id:'gen-step-2',d:1200},{id:'gen-step-3',d:2400},{id:'gen-step-4',d:3600}];
+  steps.forEach(s=>{const e=document.getElementById(s.id);e.className='gen-step';e.querySelector('span').className='gen-dot'});
+  steps.forEach((s,i)=>{setTimeout(()=>{
+    const e=document.getElementById(s.id);
+    if(i>0){const p=document.getElementById(steps[i-1].id);p.className='gen-step done';p.querySelector('span').className='gen-check';p.querySelector('span').textContent='✓'}
+    e.className='gen-step active';e.querySelector('span').className='gen-spinner';e.querySelector('span').textContent='';
+  },s.d)});
+  setTimeout(()=>{const l=document.getElementById(steps[3].id);l.className='gen-step done';l.querySelector('span').className='gen-check';l.querySelector('span').textContent='✓';setTimeout(()=>openVoyage(1),500)},4800);
 }
 
-// ============================================
 // Map
-// ============================================
-
-let mapLoaded = false;
-
-function loadMap() {
-  if (mapLoaded) return;
-  mapLoaded = true;
-
-  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
-    .then(r => r.json())
-    .then(topo => renderMap(topo))
-    .catch(() => {
-      document.getElementById('map-container').innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px">Carte indisponible hors ligne</p>';
-    });
+let mapOk=false;
+function loadMap(){
+  if(mapOk)return;mapOk=true;
+  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(r=>r.json()).then(t=>drawMap(t)).catch(()=>{document.getElementById('map-wrap').innerHTML='<p style="color:var(--ink3);text-align:center;padding:40px">Carte indisponible</p>'});
 }
-
-function renderMap(topo) {
-  const svg = document.getElementById('world-map');
-  const countries = topojsonFeature(topo, topo.objects.countries);
-
-  const w = 960, h = 500;
-  const projX = (lon) => (lon + 180) / 360 * w;
-  const projY = (lat) => (90 - lat) / 180 * h;
-
-  countries.features.forEach(feature => {
-    const id = feature.id;
-    const isVisited = Object.values(COUNTRY_CODES_NUM).includes(id);
-    const isRecent = id === COUNTRY_CODES_NUM['EG'];
-
-    geoToPath(feature.geometry, projX, projY).forEach(d => {
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', d);
-      path.setAttribute('class', `country${isVisited ? ' visited' : ''}${isRecent ? ' recent' : ''}`);
-      svg.appendChild(path);
-    });
+function drawMap(topo){
+  const svg=document.getElementById('world-map'),coll=topoFeat(topo,topo.objects.countries);
+  const w=960,h=500,px=lon=>(lon+180)/360*w,py=lat=>(90-lat)/180*h;
+  coll.features.forEach(f=>{const id=f.id,vis=Object.values(COUNTRY_CODES_NUM).includes(id),rec=id===COUNTRY_CODES_NUM.EG;
+    geo2path(f.geometry,px,py).forEach(d=>{const p=ns('path');p.setAttribute('d',d);p.setAttribute('class','country'+(vis?' visited':'')+(rec?' recent':''));svg.appendChild(p)})});
+  Object.entries(MAP_COUNTRIES).forEach(([,info])=>{
+    const cx=px(info.lon),cy=py(info.lat);
+    const c=ns('circle');c.setAttribute('cx',cx);c.setAttribute('cy',cy);c.setAttribute('r','4');c.setAttribute('class','map-point');if(info.recent)c.style.fill='var(--blue)';svg.appendChild(c);
+    const t=ns('text');t.setAttribute('x',cx);t.setAttribute('y',cy-10);t.setAttribute('text-anchor','middle');t.setAttribute('fill','var(--ink2)');t.setAttribute('font-size','10');t.setAttribute('font-family','Inter,sans-serif');t.textContent=info.name;svg.appendChild(t);
   });
-
-  Object.entries(MAP_COUNTRIES).forEach(([code, info]) => {
-    const cx = projX(info.lon), cy = projY(info.lat);
-
-    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    circle.setAttribute('cx', cx);
-    circle.setAttribute('cy', cy);
-    circle.setAttribute('r', '4');
-    circle.setAttribute('class', 'map-point');
-    if (info.recent) circle.style.fill = 'var(--accent-sky)';
-    svg.appendChild(circle);
-
-    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    text.setAttribute('x', cx);
-    text.setAttribute('y', cy - 10);
-    text.setAttribute('text-anchor', 'middle');
-    text.setAttribute('fill', 'var(--text-secondary)');
-    text.setAttribute('font-size', '10');
-    text.setAttribute('font-family', 'Inter, sans-serif');
-    text.textContent = info.name;
-    svg.appendChild(text);
+  const hx=px(1.44),hy=py(43.6);const hc=ns('circle');hc.setAttribute('cx',hx);hc.setAttribute('cy',hy);hc.setAttribute('r','3');hc.setAttribute('class','map-point');svg.appendChild(hc);
+  Object.entries(MAP_ROUTES).forEach(([code,r])=>{
+    const x1=px(r.from[0]),y1=py(r.from[1]),x2=px(r.to[0]),y2=py(r.to[1]);
+    const p=ns('path');p.setAttribute('d',`M${x1},${y1} Q${(x1+x2)/2},${Math.min(y1,y2)-30} ${x2},${y2}`);p.setAttribute('class','route-line');if(code==='EG')p.style.stroke='var(--blue)';svg.appendChild(p);
   });
-
-  // Home marker
-  const homeX = projX(1.44), homeY = projY(43.6);
-  const hc = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  hc.setAttribute('cx', homeX);
-  hc.setAttribute('cy', homeY);
-  hc.setAttribute('r', '3');
-  hc.setAttribute('class', 'map-point');
-  svg.appendChild(hc);
-
-  // Routes
-  Object.entries(MAP_ROUTES).forEach(([code, route]) => {
-    const x1 = projX(route.from[0]), y1 = projY(route.from[1]);
-    const x2 = projX(route.to[0]), y2 = projY(route.to[1]);
-    const midX = (x1 + x2) / 2, midY = Math.min(y1, y2) - 30;
-
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', `M${x1},${y1} Q${midX},${midY} ${x2},${y2}`);
-    path.setAttribute('class', 'route-line');
-    if (code === 'EG') path.style.stroke = 'var(--accent-sky)';
-    svg.appendChild(path);
-  });
-
-  document.getElementById('map-voyages-btns').innerHTML = VOYAGES.map((v, i) => `
-    <button class="map-voyage-btn ${i === 0 ? 'active' : ''}" onclick="selectMapVoyage(this)">${v.name}</button>
-  `).join('');
+  document.getElementById('map-btns').innerHTML=VOYAGES.map((v,i)=>`<button class="map-btn ${i===0?'active':''}" onclick="this.parentElement.querySelectorAll('.map-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${v.name}</button>`).join('');
+}
+function ns(tag){return document.createElementNS('http://www.w3.org/2000/svg',tag)}
+function topoFeat(topo,obj){
+  const arcs=topo.arcs,tr=topo.transform;
+  function dArc(ai){const rev=ai<0,a=arcs[rev?~ai:ai],c=[];let x=0,y=0;for(const p of a){x+=p[0];y+=p[1];c.push([x*tr.scale[0]+tr.translate[0],y*tr.scale[1]+tr.translate[1]])}return rev?c.reverse():c}
+  function dRing(r){const c=[];for(const ai of r){const ac=dArc(ai);c.push(...(c.length?ac.slice(1):ac))}return c}
+  return{type:'FeatureCollection',features:obj.geometries.map(g=>({type:'Feature',id:g.id,geometry:{type:g.type,coordinates:g.type==='Polygon'?g.arcs.map(dRing):g.type==='MultiPolygon'?g.arcs.map(p=>p.map(dRing)):[]}}))};
+}
+function geo2path(g,px,py){
+  const ps=[];function r2p(r){return r.map((c,i)=>(i?'L':'M')+px(c[0]).toFixed(1)+','+py(c[1]).toFixed(1)).join('')+'Z'}
+  if(g.type==='Polygon')ps.push(g.coordinates.map(r2p).join(''));
+  else if(g.type==='MultiPolygon')g.coordinates.forEach(p=>ps.push(p.map(r2p).join('')));
+  return ps;
 }
 
-function selectMapVoyage(btn) {
-  document.querySelectorAll('.map-voyage-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-}
-
-// TopoJSON helpers
-function topojsonFeature(topo, obj) {
-  const arcs = topo.arcs;
-  const transform = topo.transform;
-
-  function decodeArc(arcIdx) {
-    const reversed = arcIdx < 0;
-    const arc = arcs[reversed ? ~arcIdx : arcIdx];
-    const coords = [];
-    let x = 0, y = 0;
-    for (const point of arc) {
-      x += point[0]; y += point[1];
-      coords.push([
-        x * transform.scale[0] + transform.translate[0],
-        y * transform.scale[1] + transform.translate[1]
-      ]);
-    }
-    return reversed ? coords.reverse() : coords;
-  }
-
-  function decodeRing(ring) {
-    const coords = [];
-    for (const arcIdx of ring) {
-      const ac = decodeArc(arcIdx);
-      coords.push(...(coords.length ? ac.slice(1) : ac));
-    }
-    return coords;
-  }
-
-  return {
-    type: 'FeatureCollection',
-    features: obj.geometries.map(geom => ({
-      type: 'Feature',
-      id: geom.id,
-      geometry: {
-        type: geom.type,
-        coordinates: geom.type === 'Polygon'
-          ? geom.arcs.map(decodeRing)
-          : geom.type === 'MultiPolygon'
-            ? geom.arcs.map(p => p.map(decodeRing))
-            : []
-      }
-    }))
-  };
-}
-
-function geoToPath(geometry, projX, projY) {
-  const paths = [];
-  function ringToPath(ring) {
-    return ring.map((c, i) => (i === 0 ? 'M' : 'L') + projX(c[0]).toFixed(1) + ',' + projY(c[1]).toFixed(1)).join('') + 'Z';
-  }
-  if (geometry.type === 'Polygon') {
-    paths.push(geometry.coordinates.map(ringToPath).join(''));
-  } else if (geometry.type === 'MultiPolygon') {
-    geometry.coordinates.forEach(poly => paths.push(poly.map(ringToPath).join('')));
-  }
-  return paths;
-}
-
-// ============================================
-// Photo Gallery & Selection
-// ============================================
-
-function toggleChapterPhoto(voyageId, chapterIdx, photoIdx) {
-  const v = VOYAGES.find(x => x.id === voyageId);
-  if (!v) return;
-  const photo = v.chapters[chapterIdx].photos[photoIdx];
-  photo.selected = !photo.selected;
-  openVoyage(voyageId); // re-render
-}
-
-function openGallery(voyageId, chapterIdx) {
-  const v = VOYAGES.find(x => x.id === voyageId);
-  if (!v) return;
-  const ch = v.chapters[chapterIdx];
-
-  let overlay = document.querySelector('.gallery-overlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.className = 'gallery-overlay';
-    document.getElementById('app-content').appendChild(overlay);
-  }
-
-  const selectedCount = ch.photos.filter(p => p.selected).length;
-
-  overlay.innerHTML = `
-    <div class="gallery-header">
-      <div>
-        <div class="gallery-title">${ch.day} \u2014 Photos</div>
-        <div class="gallery-subtitle">${selectedCount} s\u00e9lectionn\u00e9es sur ${ch.photos.length}</div>
-      </div>
-      <button class="gallery-done" onclick="closeGallery(${voyageId})">OK</button>
-    </div>
-    <div class="gallery-grid">
-      ${ch.photos.map((p, pi) => `
-        <div class="gallery-photo ${p.selected ? 'selected' : ''}"
-             style="background-image:url('${p.url}')"
-             onclick="toggleGalleryPhoto(${voyageId}, ${chapterIdx}, ${pi})">
-          <div class="gallery-photo-check">${p.selected ? '\u2713' : ''}</div>
-        </div>
-      `).join('')}
-    </div>
-    <div class="gallery-add-row">
-      <button class="gallery-add-btn" onclick="addPhotoToChapter(${voyageId}, ${chapterIdx})">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-        Importer des photos
-      </button>
-    </div>
-  `;
-
-  requestAnimationFrame(() => overlay.classList.add('show'));
-}
-
-function toggleGalleryPhoto(voyageId, chapterIdx, photoIdx) {
-  const v = VOYAGES.find(x => x.id === voyageId);
-  if (!v) return;
-  v.chapters[chapterIdx].photos[photoIdx].selected = !v.chapters[chapterIdx].photos[photoIdx].selected;
-  openGallery(voyageId, chapterIdx); // re-render gallery
-}
-
-function closeGallery(voyageId) {
-  const overlay = document.querySelector('.gallery-overlay');
-  if (overlay) overlay.classList.remove('show');
-  setTimeout(() => openVoyage(voyageId), 300);
-}
-
-function addPhotoToChapter(voyageId, chapterIdx) {
-  // In a real app, this opens the device file picker
-  // For demo, simulate adding a photo
-  const v = VOYAGES.find(x => x.id === voyageId);
-  if (!v) return;
-
-  // Create hidden file input
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.multiple = true;
-  input.onchange = (e) => {
-    const files = Array.from(e.target.files);
-    files.forEach(file => {
-      const url = URL.createObjectURL(file);
-      v.chapters[chapterIdx].photos.push({ url, selected: true });
-    });
-    if (files.length > 0) {
-      showToast(`${files.length} photo${files.length > 1 ? 's' : ''} ajout\u00e9e${files.length > 1 ? 's' : ''} !`);
-      openGallery(voyageId, chapterIdx);
-    }
-  };
-  input.click();
-}
-
-function viewPhoto(url) {
-  let viewer = document.querySelector('.photo-viewer');
-  if (!viewer) {
-    viewer = document.createElement('div');
-    viewer.className = 'photo-viewer';
-    viewer.onclick = () => viewer.classList.remove('show');
-    document.getElementById('app-content').appendChild(viewer);
-  }
-  viewer.innerHTML = `
-    <button class="photo-viewer-close" onclick="event.stopPropagation();this.parentElement.classList.remove('show')">\u2715</button>
-    <img src="${url}" alt="Photo">
-  `;
-  requestAnimationFrame(() => viewer.classList.add('show'));
-}
-
-// ============================================
-// PDF
-// ============================================
-
-function downloadPdf() {
-  showToast('PDF g\u00e9n\u00e9r\u00e9 avec succ\u00e8s !');
-}
-
-// ============================================
 // Chat
-// ============================================
-
-function showChat() {
-  let overlay = document.querySelector('.chat-overlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.className = 'chat-overlay';
-    overlay.innerHTML = `
-      <div class="chat-panel">
-        <div class="chat-handle"></div>
-        <div class="chat-messages">
-          <div class="chat-msg ai">Bonjour ! Je peux modifier votre carnet. Que souhaitez-vous changer ?</div>
-        </div>
-        <div class="chat-input-row">
-          <input type="text" placeholder="Ex: Rends le Jour 2 plus dr\u00f4le..." id="chat-input">
-          <button onclick="sendChat()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-          </button>
-        </div>
-      </div>
-    `;
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) hideChat(); });
-    document.getElementById('app-content').appendChild(overlay);
-  }
-  requestAnimationFrame(() => overlay.classList.add('show'));
+function showChat(){
+  let o=document.querySelector('.chat-overlay');
+  if(!o){o=document.createElement('div');o.className='chat-overlay';o.innerHTML=`<div class="chat-panel"><div class="chat-handle"></div><div class="chat-messages"><div class="chat-msg ai">Que souhaitez-vous modifier ?</div></div><div class="chat-input-row"><input placeholder="Ex: Rends le Jour 2 plus drôle..." id="chat-input"><button class="chat-send" onclick="sendChat()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg></button></div></div>`;
+  o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show')});document.getElementById('app-content').appendChild(o)}
+  requestAnimationFrame(()=>o.classList.add('show'));
+}
+function sendChat(){
+  const inp=document.getElementById('chat-input'),msg=inp.value.trim();if(!msg)return;
+  const m=document.querySelector('.chat-messages');m.innerHTML+=`<div class="chat-msg user">${msg}</div>`;inp.value='';
+  setTimeout(()=>{m.innerHTML+=`<div class="chat-msg ai">C'est noté ! Modification effectuée.</div>`;m.scrollTop=m.scrollHeight},1000);
 }
 
-function hideChat() {
-  const overlay = document.querySelector('.chat-overlay');
-  if (overlay) overlay.classList.remove('show');
-}
+// Misc
+function downloadPdf(){showToast('PDF généré !')}
+function showToast(msg){let t=document.querySelector('.toast');if(!t){t=document.createElement('div');t.className='toast';document.body.appendChild(t)}t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+function updateClock(){const n=new Date();document.getElementById('status-time').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')}
 
-function sendChat() {
-  const input = document.getElementById('chat-input');
-  const msg = input.value.trim();
-  if (!msg) return;
-  const messages = document.querySelector('.chat-messages');
-  messages.innerHTML += `<div class="chat-msg user">${msg}</div>`;
-  input.value = '';
-  setTimeout(() => {
-    messages.innerHTML += `<div class="chat-msg ai">C'est not\u00e9 ! Je modifie le passage en question... Voil\u00e0, c'est fait !</div>`;
-    messages.scrollTop = messages.scrollHeight;
-  }, 1200);
-}
-
-// ============================================
-// Toast
-// ============================================
-
-function showToast(msg) {
-  let toast = document.querySelector('.toast');
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.className = 'toast';
-    document.body.appendChild(toast);
-  }
-  toast.textContent = msg;
-  toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 2500);
-}
-
-// ============================================
-// Clock
-// ============================================
-
-function updateClock() {
-  const now = new Date();
-  document.getElementById('status-time').textContent =
-    now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-}
-
-// ============================================
 // Init
-// ============================================
-
-document.addEventListener('DOMContentLoaded', () => {
-  // Restore theme — force light on first visit, respect choice after
-  const savedTheme = localStorage.getItem('tb-theme');
-  if (savedTheme) {
-    setTheme(savedTheme);
-  } else {
-    setTheme('light');
-  }
-
-  // Dark mode toggle
-  const dmToggle = document.getElementById('dark-mode-toggle');
-  if (dmToggle) {
-    dmToggle.addEventListener('change', toggleTheme);
-  }
-
-  updateClock();
-  setInterval(updateClock, 30000);
-  renderVoyageList();
-
-  // Map lazy load
-  const observer = new MutationObserver(() => {
-    if (document.getElementById('screen-map').classList.contains('active')) loadMap();
-  });
-  observer.observe(document.getElementById('screen-map'), { attributes: true, attributeFilter: ['class'] });
-
-  // Chat enter key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && document.activeElement?.id === 'chat-input') sendChat();
-  });
+document.addEventListener('DOMContentLoaded',()=>{
+  setTheme(localStorage.getItem('tb-theme')||'light');
+  const dm=document.getElementById('dark-mode-toggle');if(dm)dm.addEventListener('change',toggleTheme);
+  updateClock();setInterval(updateClock,30000);
+  renderTrips();
+  // Splash photo
+  document.getElementById('splash-photo').style.backgroundImage=`url('${IMG.splash}')`;
+  // Map lazy
+  new MutationObserver(()=>{if(document.getElementById('screen-map').classList.contains('active'))loadMap()}).observe(document.getElementById('screen-map'),{attributes:true,attributeFilter:['class']});
+  // Chat enter
+  document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.activeElement?.id==='chat-input')sendChat()});
 });
