@@ -26,9 +26,20 @@ function navTo(id){
 }
 
 // Auth
-function doLogin(){showToast('Connexion réussie');setTimeout(()=>navigateTo('screen-home'),400)}
-function doSignup(){showToast('Compte créé');setTimeout(()=>navigateTo('screen-home'),400)}
-function logout(){navigateTo('screen-splash');hist=['screen-splash']}
+function doLogin(){
+  localStorage.setItem('tb-logged','1');
+  showToast('Connexion réussie');
+  setTimeout(()=>navigateTo('screen-home'),400);
+}
+function doSignup(){
+  localStorage.setItem('tb-logged','1');
+  showToast('Compte créé');
+  setTimeout(()=>navigateTo('screen-home'),400);
+}
+function logout(){
+  localStorage.removeItem('tb-logged');
+  navigateTo('screen-splash');hist=['screen-splash'];
+}
 
 // Home
 function renderTrips(){
@@ -245,6 +256,14 @@ document.addEventListener('DOMContentLoaded',()=>{
   const dm=document.getElementById('dark-mode-toggle');if(dm)dm.addEventListener('change',toggleTheme);
   updateClock();setInterval(updateClock,30000);
   renderTrips();
+  // Auto-login if already logged in
+  if(localStorage.getItem('tb-logged')){
+    document.getElementById('screen-splash').classList.remove('active');
+    document.getElementById('screen-home').classList.add('active');
+    document.getElementById('nav').classList.remove('hidden');
+    document.querySelectorAll('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.screen==='screen-home'));
+    cur='screen-home';hist=['screen-home'];
+  }
   // Splash photo (fallback, will be replaced by Pexels)
   document.getElementById('splash-photo').style.backgroundImage=`url('${IMG.splash}')`;
   // Fetch real photos from Pexels API
