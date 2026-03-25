@@ -563,9 +563,13 @@ function updateClock() {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Restore theme
-  const savedTheme = localStorage.getItem('tb-theme') || 'light';
-  setTheme(savedTheme);
+  // Restore theme — force light on first visit, respect choice after
+  const savedTheme = localStorage.getItem('tb-theme');
+  if (savedTheme) {
+    setTheme(savedTheme);
+  } else {
+    setTheme('light');
+  }
 
   // Dark mode toggle
   const dmToggle = document.getElementById('dark-mode-toggle');
