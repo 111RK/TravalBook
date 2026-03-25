@@ -103,6 +103,7 @@ function downloadPdf() {
 
     const facesHtml = companions ? `<div class="faces-bar">Visages detectes : ${companions}</div>` : '';
     const placeHtml = `<div class="place-card"><h4>${ch.place.name}</h4><p>${ch.place.address} · ${ch.place.duration}</p><span class="stars">${'★'.repeat(Math.round(ch.place.rating))} ${ch.place.rating}</span></div>`;
+    const historyHtml = ch.history ? `<div class="history-block"><div class="history-head">Histoire du lieu</div>${ch.history.thumbnail ? `<img src="${ch.history.thumbnail}" class="history-img">` : ''}<p class="history-text">${ch.history.summary}</p></div>` : '';
     const quoteHtml = `<div class="quote"><p>"${q.text}"</p><span>— ${q.attr}</span></div>`;
 
     // === SPREAD 1: Full-page hero photo ===
@@ -138,7 +139,7 @@ function downloadPdf() {
           <div class="sec-bar">${ch.day.toUpperCase()}</div>
           ${allPhotos[3] ? `<img src="${allPhotos[3]}" class="hero-img">` : ''}
           ${allPhotos.length >= 6 ? `<div class="grid3">${allPhotos.slice(4, 7).map(u => `<img src="${u}">`).join('')}</div>` : (allPhotos.length >= 5 ? `<div class="grid2">${allPhotos.slice(4, 6).map(u => `<img src="${u}">`).join('')}</div>` : '')}
-          ${placeHtml}${quoteHtml}
+          ${placeHtml}${historyHtml}${quoteHtml}
         </div>
       </div>`;
     } else if (layout === 1) {
@@ -153,7 +154,7 @@ function downloadPdf() {
           <h2 class="ch-title">${ch.title.toUpperCase()}</h2>
           <div class="bullet-item"><span class="bdot"></span><h4>${ch.place.name}</h4></div>
           <p>${ch.text}</p>
-          ${quoteHtml}${placeHtml}${facesHtml}
+          ${quoteHtml}${placeHtml}${historyHtml}${facesHtml}
         </div>
       </div>`;
     } else {
@@ -171,7 +172,7 @@ function downloadPdf() {
         <div class="half right side-bg">
           <h2 class="sec-title">INFOS & PHOTOS</h2>
           ${allPhotos.length >= 4 ? `<div class="photo-stack"><img src="${allPhotos[3]}" class="stack-main"><div class="stack-side">${allPhotos.slice(4, 6).map(u => `<img src="${u}">`).join('')}</div></div>` : (allPhotos[3] ? `<img src="${allPhotos[3]}" class="hero-img">` : '')}
-          ${placeHtml}${quoteHtml}${facesHtml}
+          ${placeHtml}${historyHtml}${quoteHtml}${facesHtml}
         </div>
       </div>`;
     }
@@ -327,6 +328,12 @@ function downloadPdf() {
   .chev{font-size:15px;color:${C.accent};font-weight:bold}
   .subsec h4{font-size:10px;color:${C.accent};text-transform:uppercase;letter-spacing:1px}
   .faces-bar{font-size:9px;color:${C.muted};padding:5px 0;border-top:1px solid ${C.border};margin-top:6px}
+
+  /* History block */
+  .history-block{background:${C.card};border:1px solid ${C.border};border-radius:6px;padding:10px 12px;margin:8px 0}
+  .history-head{font:600 9px ${S.bodyFont};color:${C.accent};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+  .history-img{float:right;width:70px;height:55px;object-fit:cover;border-radius:5px;margin:0 0 6px 10px}
+  .history-text{font:400 9px ${S.bodyFont};line-height:1.55;color:${C.muted};margin:0}
 
   /* ROUTE */
   .route{padding:6px 0}

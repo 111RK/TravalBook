@@ -667,6 +667,27 @@ html, body { height: 100%; font-family: var(--sans); color: var(--ink); backgrou
 .map-card-tag { font: 400 10px var(--sans); background: var(--cream); color: var(--ink2); padding: 2px 7px; border-radius: 7px; }
 
 /* Divider ornament */
+/* History block (Wikipedia) */
+.ch-history {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--rs);
+  padding: 14px; margin: 12px 0; box-shadow: var(--shadow);
+}
+.ch-history-head {
+  display: flex; align-items: center; gap: 6px; font: 600 11px var(--sans);
+  color: var(--copper); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 10px;
+}
+.ch-history-head svg { color: var(--copper); flex-shrink: 0; }
+.ch-history-img {
+  float: right; width: 90px; height: 70px; object-fit: cover; border-radius: 8px;
+  margin: 0 0 8px 12px; box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+.ch-history-text { font: 400 12px var(--sans); line-height: 1.65; color: var(--ink2); margin-bottom: 8px; }
+.ch-history-link {
+  font: 500 11px var(--sans); color: var(--copper); text-decoration: none;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.ch-history-link:hover { text-decoration: underline; }
+
 .ornament { text-align: center; color: var(--copper); letter-spacing: 10px; font-size: 11px; opacity: .45; margin: 8px 0 16px; }
 
 .carnet-footer {

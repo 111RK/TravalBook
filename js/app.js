@@ -491,6 +491,16 @@ function openVoyage(id) {
         <div style="flex:1"><div class="ch-pname">${ch.place.name}</div><div class="ch-pmeta">${ch.place.address} · ${ch.place.duration}</div></div>
         <div class="ch-prating">${'\u2605'.repeat(Math.round(ch.place.rating))} ${ch.place.rating}</div>
       </div>
+      ${ch.history ? `
+      <div class="ch-history">
+        <div class="ch-history-head">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <span>Histoire du lieu</span>
+        </div>
+        ${ch.history.thumbnail ? `<img src="${ch.history.thumbnail}" class="ch-history-img">` : ''}
+        <p class="ch-history-text">${ch.history.summary}</p>
+        <a href="${ch.history.wikiUrl}" target="_blank" class="ch-history-link">Lire plus sur Wikipedia</a>
+      </div>` : ''}
       ${mapHtml}
       <div class="ornament">· · ·</div>
     </div>`;
@@ -820,8 +830,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Splash grid
   loadSplashGrid();
 
-  // Fetch photos from Pexels for all voyages
+  // Fetch photos from Pexels + Wikipedia history for all voyages
   fetchAllPhotos().then(() => { console.log('Pexels photos loaded'); });
+  enrichAllVoyages().then(() => { console.log('Wikipedia history loaded'); renderTrips(); });
 
   // Map lazy-load
   new MutationObserver(() => {
