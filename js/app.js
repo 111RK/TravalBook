@@ -249,163 +249,125 @@ function sendChat(){
 async function downloadPdf(){
   const v=VOYAGES.find(x=>x.id===curVoyage);
   if(!v){showToast('Aucun voyage sélectionné');return}
-  showToast('Génération du PDF...');
+  showToast('Génération du PDF en cours...');
 
-  const {jsPDF}=window.jspdf;
-  // A5: 148mm x 210mm
-  const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a5'});
-  const W=148,H=210;
+  try{
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a5'});
+    const W=148,H=210;
 
-  // --- Helper: load image as base64 ---
-  async function loadImg(url){
-    try{
-      const res=await fetch(url,{mode:'cors'});
-      const blob=await res.blob();
-      return new Promise(r=>{const rd=new FileReader();rd.onload=()=>r(rd.result);rd.readAsDataURL(blob)});
-    }catch(e){return null}
-  }
-
-  // --- COVER PAGE ---
-  // Background color
-  pdf.setFillColor(26,26,26);
-  pdf.rect(0,0,W,H,'F');
-
-  // Try to load cover image
-  const coverB64=await loadImg(v.cover);
-  if(coverB64){
-    try{pdf.addImage(coverB64,'JPEG',0,0,W,H/2)}catch(e){}
-  }
-
-  // Gradient overlay (simulated with semi-transparent rect)
-  pdf.setFillColor(26,26,26);
-  pdf.rect(0,H/2-30,W,H/2+30,'F');
-
-  // Title
-  pdf.setFont('helvetica','bold');
-  pdf.setFontSize(32);
-  pdf.setTextColor(255,255,255);
-  pdf.text(v.name,W/2,H/2+15,{align:'center'});
-
-  // Subtitle
-  pdf.setFont('helvetica','normal');
-  pdf.setFontSize(12);
-  pdf.setTextColor(180,180,180);
-  pdf.text(`${v.country} — ${v.days} jours`,W/2,H/2+25,{align:'center'});
-  pdf.text(v.dates,W/2,H/2+33,{align:'center'});
-
-  // Companions
-  if(v.companions&&v.companions.length){
-    pdf.setFontSize(10);
-    pdf.setTextColor(160,160,160);
-    pdf.text('Avec '+v.companions.join(', '),W/2,H/2+43,{align:'center'});
-  }
-
-  // Stats
-  pdf.setFontSize(9);
-  pdf.setTextColor(140,140,140);
-  pdf.text(`${v.stats.photos} photos · ${v.stats.lieux} lieux · ${v.stats.mots} mots · ${v.stats.temp} moy.`,W/2,H-30,{align:'center'});
-
-  // Brand
-  pdf.setFontSize(8);
-  pdf.setTextColor(100,100,100);
-  pdf.text('TravelBook',W/2,H-15,{align:'center'});
-
-  // --- CHAPTER PAGES ---
-  for(let i=0;i<v.chapters.length;i++){
-    const ch=v.chapters[i];
-    pdf.addPage();
-
-    let y=15;
-
-    // Day label
-    pdf.setFont('helvetica','normal');
-    pdf.setFontSize(9);
-    pdf.setTextColor(176,106,59);
-    pdf.text(ch.day.toUpperCase(),15,y);
-    y+=8;
-
-    // Title
-    pdf.setFont('helvetica','bold');
-    pdf.setFontSize(18);
-    pdf.setTextColor(26,26,26);
-    const titleLines=pdf.splitTextToSize(ch.title,W-30);
-    pdf.text(titleLines,15,y);
-    y+=titleLines.length*8+6;
-
-    // Chapter image
-    const selPhotos=ch.photos?ch.photos.filter(p=>p.on):[];
-    if(selPhotos.length){
-      const imgB64=await loadImg(selPhotos[0].url);
-      if(imgB64){
-        try{
-          pdf.addImage(imgB64,'JPEG',15,y,W-30,55,undefined,'MEDIUM');
-          y+=60;
-        }catch(e){y+=5}
-      }
+    // Helper: load image via <img> to avoid CORS fetch issues
+    function loadImg(url){
+      return new Promise(resolve=>{
+        const img=new Image();
+        img.crossOrigin='anonymous';
+        img.onload=()=>{
+          try{
+            const c=document.createElement('canvas');
+            c.width=img.naturalWidth;c.height=img.naturalHeight;
+            c.getContext('2d').drawImage(img,0,0);
+            resolve(c.toDataURL('image/jpeg',0.75));
+          }catch(e){resolve(null)}
+        };
+        img.onerror=()=>resolve(null);
+        // Add cache buster for CORS
+        img.src=url+(url.includes('?')?'&':'?')+'_t='+Date.now();
+        // Timeout after 4s
+        setTimeout(()=>resolve(null),4000);
+      });
     }
 
-    // Text
-    pdf.setFont('helvetica','normal');
-    pdf.setFontSize(10);
-    pdf.setTextColor(80,80,80);
-    const textLines=pdf.splitTextToSize(ch.text,W-30);
-    // Check if text fits, otherwise split across pages
-    for(let l=0;l<textLines.length;l++){
-      if(y>H-30){
-        pdf.addPage();
-        y=15;
+    // --- COVER ---
+    pdf.setFillColor(26,26,26);
+    pdf.rect(0,0,W,H,'F');
+
+    const coverB64=await loadImg(v.cover);
+    if(coverB64){try{pdf.addImage(coverB64,'JPEG',0,0,W,H/2)}catch(e){}}
+
+    pdf.setFillColor(26,26,26);
+    pdf.rect(0,H/2-30,W,H/2+30,'F');
+
+    pdf.setFont('helvetica','bold');pdf.setFontSize(32);pdf.setTextColor(255,255,255);
+    pdf.text(v.name,W/2,H/2+15,{align:'center'});
+
+    pdf.setFont('helvetica','normal');pdf.setFontSize(12);pdf.setTextColor(180,180,180);
+    pdf.text(v.country+' \u2014 '+v.days+' jours',W/2,H/2+25,{align:'center'});
+    pdf.text(v.dates,W/2,H/2+33,{align:'center'});
+
+    if(v.companions&&v.companions.length){
+      pdf.setFontSize(10);pdf.setTextColor(160,160,160);
+      pdf.text('Avec '+v.companions.join(', '),W/2,H/2+43,{align:'center'});
+    }
+
+    pdf.setFontSize(9);pdf.setTextColor(140,140,140);
+    pdf.text(v.stats.photos+' photos \u00b7 '+v.stats.lieux+' lieux \u00b7 '+v.stats.mots+' mots',W/2,H-30,{align:'center'});
+
+    pdf.setFontSize(8);pdf.setTextColor(100,100,100);
+    pdf.text('TravelBook',W/2,H-15,{align:'center'});
+
+    // --- CHAPTERS ---
+    for(let i=0;i<v.chapters.length;i++){
+      const ch=v.chapters[i];
+      pdf.addPage();
+      let y=15;
+
+      pdf.setFont('helvetica','normal');pdf.setFontSize(9);pdf.setTextColor(176,106,59);
+      pdf.text(ch.day.toUpperCase(),15,y);y+=8;
+
+      pdf.setFont('helvetica','bold');pdf.setFontSize(18);pdf.setTextColor(26,26,26);
+      const tl=pdf.splitTextToSize(ch.title,W-30);
+      pdf.text(tl,15,y);y+=tl.length*8+6;
+
+      // Try chapter image (don't block if fails)
+      const selP=ch.photos?ch.photos.filter(p=>p.on):[];
+      if(selP.length){
+        const ib=await loadImg(selP[0].url||selP[0].thumb||'');
+        if(ib){try{pdf.addImage(ib,'JPEG',15,y,W-30,55,undefined,'MEDIUM');y+=60}catch(e){}}
       }
-      pdf.text(textLines[l],15,y);
+
+      pdf.setFont('helvetica','normal');pdf.setFontSize(10);pdf.setTextColor(80,80,80);
+      const lines=pdf.splitTextToSize(ch.text,W-30);
+      for(const line of lines){
+        if(y>H-30){pdf.addPage();y=15}
+        pdf.text(line,15,y);y+=5;
+      }
       y+=5;
-    }
-    y+=5;
 
-    // Place info box
-    if(y<H-25){
-      pdf.setDrawColor(220,220,220);
-      pdf.setFillColor(248,247,245);
-      pdf.roundedRect(15,y,W-30,18,2,2,'FD');
-      pdf.setFont('helvetica','bold');
-      pdf.setFontSize(9);
-      pdf.setTextColor(26,26,26);
-      pdf.text(ch.place.name,20,y+6);
-      pdf.setFont('helvetica','normal');
-      pdf.setFontSize(8);
-      pdf.setTextColor(120,120,120);
-      pdf.text(`${ch.place.address} · ${ch.place.duration}`,20,y+12);
-      // Stars
-      pdf.setTextColor(176,106,59);
-      pdf.text('★'.repeat(Math.round(ch.place.rating))+' '+ch.place.rating,W-20,y+9,{align:'right'});
+      if(y<H-25){
+        pdf.setDrawColor(220,220,220);pdf.setFillColor(248,247,245);
+        pdf.roundedRect(15,y,W-30,18,2,2,'FD');
+        pdf.setFont('helvetica','bold');pdf.setFontSize(9);pdf.setTextColor(26,26,26);
+        pdf.text(ch.place.name,20,y+6);
+        pdf.setFont('helvetica','normal');pdf.setFontSize(8);pdf.setTextColor(120,120,120);
+        pdf.text(ch.place.address+' \u00b7 '+ch.place.duration,20,y+12);
+        pdf.setTextColor(176,106,59);
+        const stars='\u2605'.repeat(Math.round(ch.place.rating))+' '+ch.place.rating;
+        pdf.text(stars,W-20,y+9,{align:'right'});
+      }
+
+      pdf.setFont('helvetica','normal');pdf.setFontSize(8);pdf.setTextColor(160,160,160);
+      pdf.text(String(i+1),W/2,H-8,{align:'center'});
     }
 
-    // Page number
-    pdf.setFont('helvetica','normal');
+    // --- LAST PAGE ---
+    pdf.addPage();
+    pdf.setFillColor(248,247,245);pdf.rect(0,0,W,H,'F');
+    pdf.setFont('helvetica','bold');pdf.setFontSize(20);pdf.setTextColor(176,106,59);
+    pdf.text('TravelBook',W/2,H/2-10,{align:'center'});
+    pdf.setFont('helvetica','normal');pdf.setFontSize(10);pdf.setTextColor(140,140,140);
+    pdf.text('Votre Livre de Voyage',W/2,H/2+2,{align:'center'});
     pdf.setFontSize(8);
-    pdf.setTextColor(160,160,160);
-    pdf.text(String(i+1),W/2,H-8,{align:'center'});
+    pdf.text('G\u00e9n\u00e9r\u00e9 par TravelBook',W/2,H/2+15,{align:'center'});
+    pdf.text(new Date().toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'}),W/2,H/2+22,{align:'center'});
+
+    // Direct download (no popup blocker issue)
+    pdf.save('TravelBook-'+v.name.replace(/[^a-zA-Z0-9]/g,'')+'.pdf');
+    showToast('PDF t\u00e9l\u00e9charg\u00e9 !');
+
+  }catch(err){
+    console.error('PDF error:',err);
+    showToast('Erreur: '+err.message);
   }
-
-  // --- LAST PAGE ---
-  pdf.addPage();
-  pdf.setFillColor(248,247,245);
-  pdf.rect(0,0,W,H,'F');
-  pdf.setFont('helvetica','bold');
-  pdf.setFontSize(20);
-  pdf.setTextColor(176,106,59);
-  pdf.text('TravelBook',W/2,H/2-10,{align:'center'});
-  pdf.setFont('helvetica','normal');
-  pdf.setFontSize(10);
-  pdf.setTextColor(140,140,140);
-  pdf.text('Votre Livre de Voyage',W/2,H/2+2,{align:'center'});
-  pdf.setFontSize(8);
-  pdf.text('Généré automatiquement par TravelBook',W/2,H/2+15,{align:'center'});
-  pdf.text(new Date().toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'}),W/2,H/2+22,{align:'center'});
-
-  // Open PDF
-  const blob=pdf.output('blob');
-  const url=URL.createObjectURL(blob);
-  window.open(url,'_blank');
-  showToast('PDF généré !');
 }
 function showToast(msg){let t=document.querySelector('.toast');if(!t){t=document.createElement('div');t.className='toast';document.body.appendChild(t)}t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
 function updateClock(){const n=new Date();document.getElementById('status-time').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')}
