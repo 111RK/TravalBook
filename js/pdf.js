@@ -379,7 +379,8 @@ function generatePhotoBookHtml(v, tpl, S) {
   #flipbook-overlay.active{display:flex}
   #flipbook-container{position:relative;overflow:hidden;transition:all .4s ease}
   .stf__parent{box-shadow:0 10px 60px rgba(0,0,0,.5);background:transparent!important;transition:clip-path .4s ease, transform .4s ease}
-  #flipbook-container.cover-mode .stf__parent{clip-path:inset(0 0 0 50%);transform:translateX(-25%)}
+  #flipbook-container.cover-front .stf__parent{clip-path:inset(0 0 0 50%);transform:translateX(-25%)}
+  #flipbook-container.cover-back .stf__parent{clip-path:inset(0 50% 0 0);transform:translateX(25%)}
   .fb-toolbar{position:fixed;bottom:0;left:0;right:0;background:rgba(20,20,20,.95);backdrop-filter:blur(10px);padding:12px 20px;display:flex;align-items:center;justify-content:center;gap:12px;z-index:1001;border-top:1px solid rgba(255,255,255,.1)}
   .fb-btn{padding:10px 20px;border:none;border-radius:8px;font:600 13px ${S.bodyFont};cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
   .fb-btn:hover{opacity:.85;transform:translateY(-1px)}
@@ -507,17 +508,18 @@ async function openFlipbook() {
 
   flipbook.loadFromImages(pageImages);
 
-  // Start in cover mode (centered single page)
-  container.classList.add('cover-mode');
+  // Start in front cover mode (centered single page)
+  container.classList.add('cover-front');
 
   flipbook.on('flip', (e) => {
     const pg = e.data;
-    document.getElementById('fb-page-info').textContent = (pg + 1) + ' / ' + flipbook.getPageCount();
-    // Center when on cover (page 0) or back cover (last page), spread otherwise
-    if (pg === 0 || pg >= flipbook.getPageCount() - 1) {
-      container.classList.add('cover-mode');
-    } else {
-      container.classList.remove('cover-mode');
+    const total = flipbook.getPageCount();
+    document.getElementById('fb-page-info').textContent = (pg + 1) + ' / ' + total;
+    container.classList.remove('cover-front', 'cover-back');
+    if (pg === 0) {
+      container.classList.add('cover-front');
+    } else if (pg >= total - 1) {
+      container.classList.add('cover-back');
     }
   });
   document.getElementById('fb-page-info').textContent = '1 / ' + flipbook.getPageCount();
