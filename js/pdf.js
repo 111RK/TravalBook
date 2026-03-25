@@ -353,31 +353,31 @@ function generatePhotoBookHtml(v, tpl, S) {
   .pb-pin{font-size:18px;margin-top:10px;opacity:.6}
 
   /* ===== DESIGNED SPREAD ===== */
-  /* Left page: hero + title + thumbnails */
-  .pb-dspread-left{display:flex;flex-direction:column}
-  .pb-dspread-hero{flex:1;overflow:hidden}
-  .pb-dspread-hero img{width:100%;height:100%;object-fit:cover}
-  .pb-dspread-left-bottom{padding:10mm 10mm 8mm;background:${C.bg}}
-  .pb-dspread-title-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  /* Left page: hero photo (70%) + title bar + thumbnails strip */
+  .pb-dspread-left{display:grid;grid-template-rows:1fr auto auto;overflow:hidden}
+  .pb-dspread-hero{overflow:hidden;min-height:0}
+  .pb-dspread-hero img{width:100%;height:100%;object-fit:cover;display:block}
+  .pb-dspread-left-bottom{padding:8mm 8mm 6mm;background:${C.bg}}
+  .pb-dspread-title-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
   .pb-dspread-dot{width:14px;height:14px;border-radius:50%;background:${C.accent};flex-shrink:0}
-  .pb-dspread-title{font:800 22px ${S.bodyFont};color:${C.accent};letter-spacing:2px;line-height:1.2;margin:0}
+  .pb-dspread-title{font:800 20px ${S.bodyFont};color:${C.accent};letter-spacing:2px;line-height:1.2;margin:0}
   .pb-dspread-thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
-  .pb-dspread-thumbs img{width:100%;height:80px;object-fit:cover;border-radius:3px}
+  .pb-dspread-thumbs img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:3px}
 
-  /* Right page: photo accent + text + photos + place */
-  .pb-dspread-right{display:flex;flex-direction:column;padding:10mm}
-  .pb-dspread-right-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
-  .pb-dspread-accent-img{width:45%;height:100px;object-fit:cover;border-radius:4px}
-  .pb-dspread-day{font:600 10px ${S.bodyFont};color:${C.muted};letter-spacing:3px;text-transform:uppercase;padding-top:4px}
-  .pb-dspread-text{flex:1;margin-bottom:12px}
-  .pb-dspread-text p{font:400 10.5px ${S.bodyFont};color:${C.ink};line-height:1.75;margin-bottom:8px}
-  .pb-dspread-history{font:italic 400 10px ${serifFont};color:${C.muted};line-height:1.6}
-  .pb-dspread-quote{border-left:3px solid ${C.accent};padding:8px 14px;margin-bottom:12px;background:${C.quote || 'rgba(0,0,0,.02)'};border-radius:0 6px 6px 0}
+  /* Right page: accent photo top + text + quote + photos bottom */
+  .pb-dspread-right{display:grid;grid-template-rows:auto 1fr auto auto;padding:8mm 10mm;gap:0}
+  .pb-dspread-right-top{display:flex;gap:10px;margin-bottom:10px}
+  .pb-dspread-accent-img{width:55%;aspect-ratio:16/9;object-fit:cover;border-radius:4px}
+  .pb-dspread-day{font:600 10px ${S.bodyFont};color:${C.muted};letter-spacing:3px;text-transform:uppercase;padding-top:4px;align-self:flex-start}
+  .pb-dspread-text{overflow:hidden}
+  .pb-dspread-text p{font:400 10px ${S.bodyFont};color:${C.ink};line-height:1.7;margin-bottom:6px}
+  .pb-dspread-history{font:italic 400 9.5px ${serifFont};color:${C.muted};line-height:1.55}
+  .pb-dspread-quote{border-left:3px solid ${C.accent};padding:8px 14px;margin:8px 0;background:${C.quote || 'rgba(0,0,0,.02)'};border-radius:0 6px 6px 0}
   .pb-dspread-quote p{font:italic 400 11px ${serifFont};color:${C.accent};line-height:1.5;margin:0}
   .pb-dspread-quote span{font:400 9px ${S.bodyFont};color:${C.muted};display:block;margin-top:4px;text-align:right}
-  .pb-dspread-right-photos{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:10px}
-  .pb-dspread-right-photos img{width:100%;height:120px;object-fit:cover;border-radius:4px}
-  .pb-dspread-place{font:500 9px ${S.bodyFont};color:${C.muted};letter-spacing:1px}
+  .pb-dspread-right-photos{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:auto}
+  .pb-dspread-right-photos img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:4px}
+  .pb-dspread-place{font:500 9px ${S.bodyFont};color:${C.muted};letter-spacing:1px;margin-top:6px}
   .pb-icon-loc{margin-right:4px}
 
   /* ===== SPLIT LAYOUT ===== */
@@ -448,10 +448,13 @@ function generatePhotoBookHtml(v, tpl, S) {
   /* ===== FLIPBOOK OVERLAY ===== */
   #flipbook-overlay{position:fixed;inset:0;background:#1a1a1a;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:1000}
   #flipbook-overlay.active{display:flex}
-  #flipbook-container{position:relative;overflow:hidden;transition:all .4s ease}
-  .stf__parent{box-shadow:0 10px 60px rgba(0,0,0,.5);background:transparent!important;transition:clip-path .4s ease, transform .4s ease}
-  #flipbook-container.cover-front .stf__parent{clip-path:inset(0 0 0 50%);transform:translateX(-25%)}
-  #flipbook-container.cover-back .stf__parent{clip-path:inset(0 50% 0 0);transform:translateX(25%)}
+  #flipbook-container{position:relative}
+  .stf__parent{box-shadow:0 10px 60px rgba(0,0,0,.5);background:transparent!important}
+
+  /* Static cover overlay — displayed like a closed book */
+  #fb-static-cover{position:absolute;z-index:10;cursor:pointer;border-radius:4px;box-shadow:8px 4px 30px rgba(0,0,0,.5);transition:transform .6s ease, opacity .4s ease;transform-origin:left center}
+  #fb-static-cover.opening{transform:perspective(1200px) rotateY(-85deg);opacity:0}
+  #fb-static-cover img{display:block;width:100%;height:100%;border-radius:4px}
   .fb-toolbar{position:fixed;bottom:0;left:0;right:0;background:rgba(20,20,20,.95);backdrop-filter:blur(10px);padding:12px 20px;display:flex;align-items:center;justify-content:center;gap:12px;z-index:1001;border-top:1px solid rgba(255,255,255,.1)}
   .fb-btn{padding:10px 20px;border:none;border-radius:8px;font:600 13px ${S.bodyFont};cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
   .fb-btn:hover{opacity:.85;transform:translateY(-1px)}
@@ -479,7 +482,9 @@ ${pages}
 <div id="flipbook-overlay">
   <div class="fb-title">TravelBook — ${v.name}</div>
   <button class="fb-close" onclick="closeFlipbook()" title="Fermer">&times;</button>
-  <div id="flipbook-container"></div>
+  <div id="flipbook-container">
+    <div id="fb-static-cover" onclick="openBook()"></div>
+  </div>
   <div class="fb-loading" id="fb-loading">Chargement du livre...</div>
   <div class="fb-toolbar" id="fb-toolbar" style="display:none">
     <button class="fb-btn fb-nav" onclick="flipbook.flipPrev()">&#8249;</button>
@@ -578,32 +583,52 @@ async function openFlipbook() {
     pageH = Math.round(pageW / 0.7071);
   }
 
+  // Use showCover:false — all pages in pairs. Cover is page 0 (LEFT of first spread)
+  // We'll overlay a static cover image on top for the "closed book" effect
   flipbook = new St.PageFlip(container, {
     width: pageW, height: pageH, size: 'fixed',
     minWidth: 200, maxWidth: 600, minHeight: 280, maxHeight: 850,
-    showCover: true, maxShadowOpacity: 0.5, mobileScrollSupport: false,
+    showCover: false, maxShadowOpacity: 0.5, mobileScrollSupport: false,
     flippingTime: 800, useMouseEvents: true, swipeDistance: 30, drawShadow: true, autoSize: true
   });
 
-  flipbook.loadFromImages(pageImages);
+  // Skip cover image (index 0) in flipbook — it goes on the static overlay
+  flipbook.loadFromImages(pageImages.slice(1));
 
-  // Start in front cover mode (centered single page)
-  container.classList.add('cover-front');
+  // Place static cover image on top of the flipbook
+  const staticCover = document.getElementById('fb-static-cover');
+  staticCover.innerHTML = '<img src="' + pageImages[0] + '" alt="Cover">';
+  staticCover.style.width = pageW + 'px';
+  staticCover.style.height = pageH + 'px';
+  // Position it on the LEFT side of the flipbook (where page 0 would be)
+  const stfParent = container.querySelector('.stf__parent');
+  if (stfParent) {
+    const rect = stfParent.getBoundingClientRect();
+    const contRect = container.getBoundingClientRect();
+    staticCover.style.top = (rect.top - contRect.top) + 'px';
+    staticCover.style.left = (rect.left - contRect.left) + 'px';
+  } else {
+    staticCover.style.top = '0';
+    staticCover.style.left = '0';
+  }
+  bookOpen = false;
 
   flipbook.on('flip', (e) => {
     const pg = e.data;
     const total = flipbook.getPageCount();
-    document.getElementById('fb-page-info').textContent = (pg + 1) + ' / ' + total;
-    container.classList.remove('cover-front', 'cover-back');
-    if (pg === 0) {
-      container.classList.add('cover-front');
-    } else if (pg >= total - 1) {
-      container.classList.add('cover-back');
-    }
+    document.getElementById('fb-page-info').textContent = (pg + 2) + ' / ' + (total + 1);
   });
-  document.getElementById('fb-page-info').textContent = '1 / ' + flipbook.getPageCount();
+  document.getElementById('fb-page-info').textContent = '1 / ' + (flipbook.getPageCount() + 1);
   document.getElementById('fb-toolbar').style.display = 'flex';
   flipbookReady = true;
+}
+
+let bookOpen = false;
+function openBook() {
+  const staticCover = document.getElementById('fb-static-cover');
+  staticCover.classList.add('opening');
+  bookOpen = true;
+  setTimeout(() => { staticCover.style.display = 'none'; }, 600);
 }
 
 function closeFlipbook() {
