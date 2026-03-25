@@ -169,17 +169,21 @@ function generatePhotoBookHtml(v, tpl, S) {
       </div>`;
     }
 
-    // --- PAGE: Full-bleed photo with white frame overlay ---
+    // --- SPREAD: Double-page photo (left half + right half of same image) ---
     if (allPhotos[0]) {
       pages += `
-      <div class="pb-page pb-fullbleed">
-        <img src="${allPhotos[0]}" class="pb-fullbleed-img">
-        <div class="pb-fullbleed-frame"></div>
-        <div class="pb-fullbleed-script">${ch.place.name}</div>
-        <div class="pb-fullbleed-caption">
-          <span class="pb-icon-loc">📍</span>
-          ${ch.place.address || ch.place.name}<br>
-          ${ch.day} · ${ch.place.duration}
+      <div class="pb-page pb-spread-left">
+        <img src="${allPhotos[0]}" class="pb-spread-img pb-spread-img-left">
+      </div>
+      <div class="pb-page pb-spread-right">
+        <img src="${allPhotos[0]}" class="pb-spread-img pb-spread-img-right">
+        <div class="pb-spread-overlay">
+          <div class="pb-fullbleed-script">${ch.place.name}</div>
+          <div class="pb-fullbleed-caption">
+            <span class="pb-icon-loc">📍</span>
+            ${ch.place.address || ch.place.name}<br>
+            ${ch.day} · ${ch.place.duration}
+          </div>
         </div>
       </div>`;
     }
@@ -308,12 +312,14 @@ function generatePhotoBookHtml(v, tpl, S) {
   .pb-body{font:400 11px ${S.bodyFont};color:${C.ink};line-height:1.8}
   .pb-pin{font-size:18px;margin-top:10px;opacity:.6}
 
-  /* ===== FULL BLEED WITH FRAME ===== */
-  .pb-fullbleed{overflow:hidden}
-  .pb-fullbleed-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .pb-fullbleed-frame{position:absolute;top:16mm;left:16mm;right:16mm;bottom:16mm;border:2px solid rgba(255,255,255,.7);pointer-events:none}
-  .pb-fullbleed-script{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font:700 52px ${scriptFont};color:white;text-shadow:0 4px 25px rgba(0,0,0,.5);white-space:nowrap}
-  .pb-fullbleed-caption{position:absolute;bottom:22mm;right:22mm;font:400 9px ${S.bodyFont};color:rgba(255,255,255,.8);text-align:right;line-height:1.6;background:rgba(0,0,0,.3);padding:8px 14px;border-radius:4px;backdrop-filter:blur(4px)}
+  /* ===== DOUBLE-PAGE SPREAD (image across 2 pages) ===== */
+  .pb-spread-left,.pb-spread-right{overflow:hidden;position:relative}
+  .pb-spread-img{position:absolute;top:0;height:100%;width:200%;object-fit:cover}
+  .pb-spread-img-left{left:0}
+  .pb-spread-img-right{right:0}
+  .pb-spread-overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:22mm;background:linear-gradient(to top,rgba(0,0,0,.4) 0%,transparent 40%)}
+  .pb-fullbleed-script{font:700 52px ${scriptFont};color:white;text-shadow:0 4px 25px rgba(0,0,0,.5);white-space:nowrap}
+  .pb-fullbleed-caption{font:400 9px ${S.bodyFont};color:rgba(255,255,255,.8);line-height:1.6;background:rgba(0,0,0,.3);padding:8px 14px;border-radius:4px;backdrop-filter:blur(4px);display:inline-block;margin-top:8px}
   .pb-icon-loc{margin-right:4px}
 
   /* ===== SPLIT LAYOUT ===== */
@@ -502,13 +508,21 @@ async function openFlipbook() {
 
   loading.style.display = 'none';
 
-  const viewH = window.innerHeight - 100;
-  const pageH = viewH;
-  const pageW = Math.round(pageH * 0.707);
+  // A4 portrait ratio: 210/297 = 0.7071
+  const maxH = window.innerHeight - 110;
+  const maxSpreadW = window.innerWidth - 40;
+  // Each page is half the spread; spread = 2 pages side by side
+  let pageH = maxH;
+  let pageW = Math.round(pageH * 0.7071);
+  // Ensure spread (2 pages) fits in viewport width
+  if (pageW * 2 > maxSpreadW) {
+    pageW = Math.round(maxSpreadW / 2);
+    pageH = Math.round(pageW / 0.7071);
+  }
 
   flipbook = new St.PageFlip(container, {
     width: pageW, height: pageH, size: 'fixed',
-    minWidth: 300, maxWidth: 800, minHeight: 420, maxHeight: 1130,
+    minWidth: 200, maxWidth: 600, minHeight: 280, maxHeight: 850,
     showCover: true, maxShadowOpacity: 0.5, mobileScrollSupport: false,
     flippingTime: 800, useMouseEvents: true, swipeDistance: 30, drawShadow: true, autoSize: true
   });
