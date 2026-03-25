@@ -388,10 +388,10 @@ html, body { height: 100%; font-family: var(--sans); color: var(--ink); backgrou
 .sw-card {
   width: 100%; max-width: 330px; border-radius: var(--r); overflow: hidden;
   background: var(--card); box-shadow: var(--shadow-lg);
-  position: absolute; transition: transform .4s, opacity .4s;
+  transition: transform .4s ease, opacity .4s ease;
 }
-.sw-card.out-l { transform: translateX(-150%) rotate(-12deg); opacity: 0; }
-.sw-card.out-r { transform: translateX(150%) rotate(12deg); opacity: 0; }
+.sw-card.out-l { transform: translateX(-150%) rotate(-12deg); opacity: 0; pointer-events: none; }
+.sw-card.out-r { transform: translateX(150%) rotate(12deg); opacity: 0; pointer-events: none; }
 .sw-img { height: 240px; background-size: cover; background-position: center; position: relative; }
 .sw-dur {
   position: absolute; bottom: 10px; right: 10px; padding: 4px 10px;

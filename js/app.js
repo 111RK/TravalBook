@@ -234,11 +234,18 @@ function renderSwipe() {
     <div><span class="sw-stars">${'\u2605'.repeat(Math.round(p.rating))}</span> <span class="sw-rating">${p.rating} (${p.reviews.toLocaleString()})</span></div></div></div>`;
 }
 
+let swiping = false;
 function swipeAction(d) {
+  if (swiping) return;
   const c = document.getElementById('sw-cur');
   if (!c) return;
+  swiping = true;
   c.classList.add(d === 'left' ? 'out-l' : 'out-r');
-  setTimeout(() => { swIdx++; renderSwipe(); }, 400);
+  setTimeout(() => {
+    swIdx++;
+    swiping = false;
+    renderSwipe();
+  }, 450);
 }
 
 let tx = 0;
