@@ -1,7 +1,7 @@
 // TravelBook v6 — App Logic
 let cur = 'screen-splash', curVoyage = null, swIdx = 0, hist = ['screen-splash'];
 let importedPhotos = []; // For photo import step
-let selectedTemplate = 'classique';
+let selectedTemplate = 'portrait-photobook';
 const NAV_SCREENS = ['screen-home', 'screen-map', 'screen-wallet', 'screen-profile'];
 
 // =============================================

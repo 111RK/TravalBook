@@ -108,6 +108,15 @@ const BOARDING_PASSES = [
 // PDF Templates — formats + styles
 const PDF_TEMPLATES = [
   {
+    id: 'portrait-photobook',
+    name: 'Photo Book Travel',
+    desc: 'A4 portrait, style magazine premium',
+    format: 'a4', orientation: 'portrait',
+    price: null, priceLabel: 'Gratuit',
+    preview: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+    icon: '📕'
+  },
+  {
     id: 'landscape-magazine',
     name: 'Magazine Paysage',
     desc: 'A4 paysage, doubles pages photos',
@@ -160,15 +169,6 @@ const PDF_TEMPLATES = [
     price: 4.99, priceLabel: '4,99 EUR',
     preview: 'linear-gradient(135deg, #E8E0D4 0%, #C4B8A8 100%)',
     icon: '⬜'
-  },
-  {
-    id: 'portrait-photobook',
-    name: 'Photo Book Travel',
-    desc: 'A4 portrait, style magazine premium',
-    format: 'a4', orientation: 'portrait',
-    price: null, priceLabel: 'Gratuit',
-    preview: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
-    icon: '📕'
   }
 ];
 
