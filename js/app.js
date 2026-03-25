@@ -746,13 +746,13 @@ function sendChat() {
 }
 
 // =============================================
-// PDF Generation
+// PDF Generation — Magazine Design
 // =============================================
 async function downloadPdf() {
   const v = VOYAGES.find(x => x.id === curVoyage);
   if (!v) { showToast('Aucun voyage selectionne'); return; }
   const tpl = PDF_TEMPLATES.find(t => t.id === selectedTemplate) || PDF_TEMPLATES[0];
-  showToast('Generation du PDF (' + tpl.name + ')...');
+  showToast('Generation du PDF...');
 
   function a(s) {
     return s.replace(/[\u2014]/g,'--').replace(/[\u00b7]/g,'.').replace(/[\u2605]/g,'*')
@@ -774,6 +774,8 @@ async function downloadPdf() {
     const M = ori === 'landscape' ? 15 : 12;
     const isLand = ori === 'landscape';
     const copper=[200,134,74], ink=[26,20,16], dust=[155,142,122], cream=[250,247,242], white=[255,255,255];
+    const cc = COUNTRY_COLORS[v.country] || {bg:[245,235,215], accent:[180,130,70], dark:[60,45,25]};
+    const quotes = QUOTES[v.country] || [{text:"Le voyage est la seule chose qu'on achete qui nous rend plus riche.",attr:"Anonyme"}];
 
     function li(url) {
       return new Promise(r => {
@@ -907,77 +909,121 @@ async function downloadPdf() {
       const ch = v.chapters[i];
       const selP = ch.photos ? ch.photos.filter(p=>p.on) : [];
 
+      const q = quotes[i % quotes.length]; // Quote for this chapter
+
       if(isLand) {
-        // ======= LANDSCAPE: photo left + text right on same page =======
+        // ======= PAGE 1: Photo left + Text right =======
         pdf.addPage(); pBg();
         const half = W * .48;
-        // Left: main photo
+
+        // Left: photo with colored overlay band at bottom
         if(selP.length) {
           const ib = await li(selP[0].url||'');
           if(ib) { try{pdf.addImage(ib,'JPEG',0,0,half,H)}catch(e){} }
-          // Day overlay on photo
-          pdf.setGState(new pdf.GState({opacity:.6}));
-          pdf.setFillColor(0,0,0); pdf.rect(0,0,half,35,'F');
-          pdf.setGState(new pdf.GState({opacity:1}));
-          pdf.setFont('helvetica','bold'); pdf.setFontSize(10); pdf.setTextColor(copper[0],copper[1],copper[2]);
-          pdf.text(a(ch.day).toUpperCase(), 10, 15);
-          pdf.setFont('helvetica','normal'); pdf.setFontSize(7); pdf.setTextColor(220,220,220);
-          pdf.text(a(ch.place.name), 10, 23);
         }
-        // Right: text
-        const rx = half + 12;
-        const tw = W - half - 24;
-        let y = 18;
-        // Title
-        hline(y-4, rx, rx+30, copper);
-        pdf.setFont('helvetica','bold'); pdf.setFontSize(18); pdf.setTextColor(ink[0],ink[1],ink[2]);
-        const ttl = pdf.splitTextToSize(a(ch.title), tw);
-        pdf.text(ttl, rx, y+4); y += ttl.length*7+10;
-        // Text
-        y = wt(ch.text, rx, y, tw, 8.5, false, [60,55,45]);
-        y += 5;
-        // Face detection
+        // Colored band at bottom of photo
+        pdf.setGState(new pdf.GState({opacity:.85}));
+        pdf.setFillColor(cc.dark[0],cc.dark[1],cc.dark[2]); pdf.rect(0,H-38,half,38,'F');
+        pdf.setGState(new pdf.GState({opacity:1}));
+        // Day + place on the band
+        pdf.setFont('helvetica','bold'); pdf.setFontSize(9); pdf.setTextColor(copper[0],copper[1],copper[2]);
+        pdf.text(a(ch.day).toUpperCase(), 10, H-26);
+        pdf.setFont('helvetica','normal'); pdf.setFontSize(7.5); pdf.setTextColor(230,230,230);
+        pdf.text(a(ch.place.name)+' | '+ch.place.duration, 10, H-17);
+        // Rating
+        pdf.setTextColor(copper[0],copper[1],copper[2]); pdf.setFontSize(8);
+        pdf.text('*'.repeat(Math.round(ch.place.rating))+' '+ch.place.rating, half-8, H-21, {align:'right'});
+
+        // Face avatars on photo (small circles top-right)
         if(ch.faces&&ch.faces.length) {
-          const names = ch.faces.map(f=>COMPANIONS[f]?COMPANIONS[f].name:f).join(', ');
-          pdf.setFont('helvetica','normal'); pdf.setFontSize(6.5); pdf.setTextColor(dust[0],dust[1],dust[2]);
-          pdf.text('Visages : '+names, rx, y); y += 6;
+          ch.faces.forEach((f,fi) => {
+            const comp = COMPANIONS[f]; if(!comp) return;
+            pdf.setFillColor(comp.gender==='F'?dust[0]:ink[0], comp.gender==='F'?dust[1]:ink[1], comp.gender==='F'?dust[2]:ink[2]);
+            pdf.circle(half-12-fi*14, 14, 5, 'F');
+            pdf.setFont('helvetica','bold'); pdf.setFontSize(6); pdf.setTextColor(255,255,255);
+            pdf.text(comp.name[0], half-12-fi*14, 15.5, {align:'center'});
+          });
         }
-        // Place card
-        if(y < H-25) {
-          pdf.setDrawColor(232,217,192); pdf.setFillColor(255,255,255);
-          pdf.roundedRect(rx, y, tw, 18, 2, 2, 'FD');
-          pdf.setFillColor(copper[0],copper[1],copper[2]); pdf.rect(rx, y, 2.5, 18, 'F');
-          pdf.setFont('helvetica','bold'); pdf.setFontSize(8); pdf.setTextColor(ink[0],ink[1],ink[2]);
-          pdf.text(a(ch.place.name), rx+7, y+6);
+
+        // Right panel: colored background strip at top (10% opacity feel)
+        const rx = half + 10, tw = W - half - 22;
+        pdf.setGState(new pdf.GState({opacity:.08}));
+        pdf.setFillColor(cc.accent[0],cc.accent[1],cc.accent[2]);
+        pdf.rect(half, 0, W-half, 50, 'F');
+        pdf.setGState(new pdf.GState({opacity:1}));
+
+        let y = 16;
+        // Day label in accent color
+        pdf.setFont('helvetica','normal'); pdf.setFontSize(8); pdf.setTextColor(cc.accent[0],cc.accent[1],cc.accent[2]);
+        pdf.text(a(ch.day).toUpperCase(), rx, y); y += 3;
+        hline(y, rx, rx+25, copper); y += 8;
+
+        // Title
+        pdf.setFont('helvetica','bold'); pdf.setFontSize(16); pdf.setTextColor(ink[0],ink[1],ink[2]);
+        const ttl = pdf.splitTextToSize(a(ch.title), tw);
+        pdf.text(ttl, rx, y); y += ttl.length*7+6;
+
+        // Narrative text
+        y = wt(ch.text, rx, y, tw, 8, false, [55,50,40]); y += 4;
+
+        // Quote block with accent background
+        if(y < H-40) {
+          pdf.setGState(new pdf.GState({opacity:.06}));
+          pdf.setFillColor(cc.accent[0],cc.accent[1],cc.accent[2]);
+          pdf.roundedRect(rx, y, tw, 28, 3, 3, 'F');
+          pdf.setGState(new pdf.GState({opacity:1}));
+          // Copper left bar
+          pdf.setFillColor(copper[0],copper[1],copper[2]); pdf.rect(rx, y+2, 2, 24, 'F');
+          // Quote text
+          pdf.setFont('helvetica','bolditalic'); pdf.setFontSize(7.5); pdf.setTextColor(cc.dark[0],cc.dark[1],cc.dark[2]);
+          const ql = pdf.splitTextToSize('"'+a(q.text)+'"', tw-12);
+          pdf.text(ql, rx+8, y+8);
           pdf.setFont('helvetica','normal'); pdf.setFontSize(6.5); pdf.setTextColor(dust[0],dust[1],dust[2]);
-          pdf.text(a(ch.place.address)+' . '+ch.place.duration, rx+7, y+12);
-          pdf.setTextColor(copper[0],copper[1],copper[2]); pdf.setFontSize(8);
-          pdf.text('*'.repeat(Math.round(ch.place.rating))+' '+ch.place.rating, rx+tw-3, y+9, {align:'right'});
+          pdf.text('-- '+a(q.attr), rx+8, y+8+ql.length*3.5+2);
         }
+
         pNum(pageNum); pageNum++;
 
-        // Extra photos page (if available, landscape grid)
+        // ======= PAGE 2: Photo grid + highlight =======
         if(selP.length > 1) {
-          pdf.addPage(); pBg();
+          pdf.addPage();
+          // Full background with country color at 8% opacity
+          pBg();
+          pdf.setGState(new pdf.GState({opacity:.06}));
+          pdf.setFillColor(cc.bg[0],cc.bg[1],cc.bg[2]); pdf.rect(0,0,W,H,'F');
+          pdf.setGState(new pdf.GState({opacity:1}));
+
           const extras = selP.slice(1, 7);
-          const cols = Math.min(extras.length, 3);
-          const gap = 5;
-          const pw = (W - M*2 - gap*(cols-1)) / cols;
-          const ph = (H - M*2 - gap) / 2;
-          for(let idx=0; idx<extras.length && idx<6; idx++) {
-            const col = idx % cols, row = Math.floor(idx / cols);
-            const ex = M + col * (pw + gap);
-            const ey = M + row * (ph + gap);
-            const eb = await li(extras[idx].url||'');
-            if(eb) { try{pdf.addImage(eb,'JPEG',ex,ey,pw,ph,undefined,'MEDIUM')}catch(e){} }
+          if(extras.length >= 3) {
+            // Top: 1 big + 2 small
+            const bigW = W*.52, bigH = H-M*2;
+            const smW = W-bigW-M*2-5, smH = (bigH-5)/2;
+            const eb0 = await li(extras[0].url||'');
+            if(eb0) { try{pdf.addImage(eb0,'JPEG',M,M,bigW-5,bigH,undefined,'MEDIUM')}catch(e){} }
+            const eb1 = await li(extras[1].url||'');
+            if(eb1) { try{pdf.addImage(eb1,'JPEG',M+bigW,M,smW,smH,undefined,'MEDIUM')}catch(e){} }
+            const eb2 = await li(extras[2].url||'');
+            if(eb2) { try{pdf.addImage(eb2,'JPEG',M+bigW,M+smH+5,smW,smH,undefined,'MEDIUM')}catch(e){} }
+          } else {
+            // 2 photos side by side
+            const pw = (W-M*2-5)/2, ph = H-M*2;
+            for(let c=0;c<extras.length&&c<2;c++) {
+              const eb = await li(extras[c].url||'');
+              if(eb) { try{pdf.addImage(eb,'JPEG',M+c*(pw+5),M,pw,ph,undefined,'MEDIUM')}catch(e){} }
+            }
           }
-          // Caption
+
+          // Caption overlay at bottom
+          pdf.setGState(new pdf.GState({opacity:.7}));
+          pdf.setFillColor(ink[0],ink[1],ink[2]); pdf.rect(0,H-18,W,18,'F');
+          pdf.setGState(new pdf.GState({opacity:1}));
           pdf.setFont('helvetica','normal'); pdf.setFontSize(7); pdf.setTextColor(dust[0],dust[1],dust[2]);
-          pdf.text(a(ch.day)+' - '+a(ch.place.name)+' | '+extras.length+' photos', W/2, H-8, {align:'center'});
+          pdf.text(a(ch.day)+' | '+a(ch.place.name)+' | '+selP.length+' photos', W/2, H-8, {align:'center'});
           pageNum++;
         }
+
       } else {
-        // ======= PORTRAIT: full photo page + text page =======
+        // ======= PORTRAIT =======
         // Photo page
         pdf.addPage();
         pdf.setFillColor(ink[0],ink[1],ink[2]); pdf.rect(0,0,W,H,'F');
@@ -985,21 +1031,26 @@ async function downloadPdf() {
           const ib = await li(selP[0].url||'');
           if(ib) { try{pdf.addImage(ib,'JPEG',0,0,W,H)}catch(e){} }
         }
-        pdf.setGState(new pdf.GState({opacity:.55}));
-        pdf.setFillColor(0,0,0); pdf.rect(0,0,W,40,'F'); pdf.rect(0,H-55,W,55,'F');
+        // Overlay bands
+        pdf.setGState(new pdf.GState({opacity:.6}));
+        pdf.setFillColor(cc.dark[0],cc.dark[1],cc.dark[2]); pdf.rect(0,0,W,35,'F'); pdf.rect(0,H-55,W,55,'F');
         pdf.setGState(new pdf.GState({opacity:1}));
-        pdf.setFont('helvetica','normal'); pdf.setFontSize(8); pdf.setTextColor(copper[0],copper[1],copper[2]);
+        pdf.setFont('helvetica','bold'); pdf.setFontSize(8); pdf.setTextColor(copper[0],copper[1],copper[2]);
         pdf.text(a(ch.day).toUpperCase(), M, 16);
         hline(H-44, M, M+30, copper);
         pdf.setFont('helvetica','bold'); pdf.setFontSize(20); pdf.setTextColor(255,255,255);
-        const tL = pdf.splitTextToSize(a(ch.title), W-24);
-        pdf.text(tL, M, H-32);
+        pdf.text(pdf.splitTextToSize(a(ch.title),W-24), M, H-32);
         pdf.setFont('helvetica','normal'); pdf.setFontSize(8); pdf.setTextColor(232,217,192);
         pdf.text(a(ch.place.name)+' | '+ch.place.duration, M, H-12);
         pageNum++;
 
         // Text page
         pdf.addPage(); pBg();
+        // Accent strip at top
+        pdf.setGState(new pdf.GState({opacity:.1}));
+        pdf.setFillColor(cc.accent[0],cc.accent[1],cc.accent[2]); pdf.rect(0,0,W,40,'F');
+        pdf.setGState(new pdf.GState({opacity:1}));
+
         let y = M+5;
         pdf.setFont('helvetica','normal'); pdf.setFontSize(8); pdf.setTextColor(copper[0],copper[1],copper[2]);
         pdf.text(a(ch.day).toUpperCase(), M, y); hline(y+2, M, M+15, copper); y += 10;
@@ -1007,13 +1058,23 @@ async function downloadPdf() {
         const ttl = pdf.splitTextToSize(a(ch.title), W-24);
         pdf.text(ttl, M, y); y += ttl.length*7+6;
         hline(y, M, W-M, [232,217,192]); y += 8;
-        y = wt(ch.text, M, y, W-24, 9.5, false, [60,55,45]); y += 5;
-        if(ch.faces&&ch.faces.length) {
-          const names = ch.faces.map(f=>COMPANIONS[f]?COMPANIONS[f].name:f).join(', ');
-          pdf.setFont('helvetica','normal'); pdf.setFontSize(7); pdf.setTextColor(dust[0],dust[1],dust[2]);
-          pdf.text('VISAGES : '+names.toUpperCase(), M, y); y += 7;
+        y = wt(ch.text, M, y, W-24, 9.5, false, [55,50,40]); y += 4;
+
+        // Quote
+        if(y < H-35) {
+          pdf.setGState(new pdf.GState({opacity:.06}));
+          pdf.setFillColor(cc.accent[0],cc.accent[1],cc.accent[2]);
+          pdf.roundedRect(M, y, W-24, 25, 3, 3, 'F');
+          pdf.setGState(new pdf.GState({opacity:1}));
+          pdf.setFillColor(copper[0],copper[1],copper[2]); pdf.rect(M, y+2, 2, 21, 'F');
+          pdf.setFont('helvetica','bolditalic'); pdf.setFontSize(8); pdf.setTextColor(cc.dark[0],cc.dark[1],cc.dark[2]);
+          pdf.text(pdf.splitTextToSize('"'+a(q.text)+'"',W-34), M+8, y+8);
+          pdf.setFont('helvetica','normal'); pdf.setFontSize(6.5); pdf.setTextColor(dust[0],dust[1],dust[2]);
+          pdf.text('-- '+a(q.attr), M+8, y+20); y += 30;
         }
-        if(y > H-30) { pdf.addPage(); pBg(); y = M; }
+
+        // Place card
+        if(y > H-28) { pdf.addPage(); pBg(); y = M; }
         pdf.setDrawColor(232,217,192); pdf.setFillColor(255,255,255);
         pdf.roundedRect(M, y, W-24, 20, 3, 3, 'FD');
         pdf.setFillColor(copper[0],copper[1],copper[2]); pdf.rect(M, y, 3, 20, 'F');
@@ -1024,6 +1085,7 @@ async function downloadPdf() {
         pdf.setTextColor(copper[0],copper[1],copper[2]); pdf.setFontSize(8);
         pdf.text('*'.repeat(Math.round(ch.place.rating))+' '+ch.place.rating, W-M-3, y+10, {align:'right'});
         y += 28;
+
         // Extra photos
         if(selP.length > 1) {
           const extras = selP.slice(1, 5);

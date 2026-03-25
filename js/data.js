@@ -163,6 +163,32 @@ const PDF_TEMPLATES = [
   }
 ];
 
+// Citations celebres par lieu (pour le PDF)
+const QUOTES = {
+  "Portugal": [
+    {text: "Lisbonne est une ville qui garde les yeux ouverts sur la mer, comme si elle attendait encore le retour de ses navigateurs.", attr: "Jose Saramago"},
+    {text: "Le Fado n'est pas triste, il est la nostalgie d'un bonheur qu'on vit encore.", attr: "Amalia Rodrigues"},
+    {text: "Voyager, c'est decouvrir que tout le monde a tort.", attr: "Aldous Huxley"}
+  ],
+  "Japon": [
+    {text: "Le Japon est le pays ou la tradition et la modernite dansent un tango permanent.", attr: "Amelie Nothomb"},
+    {text: "A Tokyo, le silence est un luxe que l'on s'offre entre deux tempetes de neons.", attr: "Haruki Murakami"},
+    {text: "Chaque temple raconte mille ans d'histoire dans un murmure.", attr: "Proverbe japonais"}
+  ],
+  "Egypte": [
+    {text: "L'Egypte est un don du Nil.", attr: "Herodote"},
+    {text: "Devant les pyramides, on comprend que l'homme a toujours reve plus grand que lui.", attr: "Victor Hugo"},
+    {text: "Le desert enseigne la patience et l'emerveillement.", attr: "Antoine de Saint-Exupery"}
+  ]
+};
+
+// Couleurs d'ambiance par pays (pour les fonds du PDF)
+const COUNTRY_COLORS = {
+  "Portugal": {bg: [245,228,200], accent: [180,120,60], dark: [60,40,20]},
+  "Japon": {bg: [220,210,220], accent: [180,50,50], dark: [40,20,30]},
+  "Egypte": {bg: [245,235,210], accent: [200,160,80], dark: [80,60,30]}
+};
+
 const VOYAGES = [
   {
     id:1, name:"Lisbonne", country:"Portugal", dates:"15-20 Mars 2026", days:6,
