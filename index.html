@@ -6,7 +6,7 @@
   <title>TravelBook</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -23,15 +23,14 @@
 
       <!-- SPLASH -->
       <div class="screen active" id="screen-splash">
-        <div class="splash-photo" id="splash-photo"></div>
+        <div class="splash-grid" id="splash-grid"></div>
         <div class="splash-overlay">
           <div class="splash-top">
-            <p class="splash-eyebrow">Votre Livre de Voyage</p>
-            <h1 class="splash-title">Travel<em>Book</em></h1>
+            <div class="splash-logo">Travel<em>Book</em></div>
             <p class="splash-sub">Importez vos photos.<br>L'IA ecrit votre histoire.</p>
           </div>
           <div class="splash-bottom">
-            <button class="btn-main" onclick="navigateTo('screen-signup')">Commencer</button>
+            <button class="btn-copper" onclick="navigateTo('screen-signup')">Commencer</button>
             <button class="btn-ghost" onclick="navigateTo('screen-login')">J'ai deja un compte</button>
           </div>
         </div>
@@ -45,9 +44,9 @@
         <div class="screen-scroll">
           <h2 class="page-title">Bon retour</h2>
           <p class="page-sub">Connectez-vous pour retrouver vos carnets</p>
-          <div class="input-wrap"><label>Email</label><input type="email" placeholder="votre@email.com"></div>
-          <div class="input-wrap"><label>Mot de passe</label><input type="password" placeholder="Votre mot de passe"></div>
-          <button class="btn-main" onclick="doLogin()" style="margin-top:24px">Se connecter</button>
+          <div class="input-wrap"><label>Email</label><input type="email" id="login-email" placeholder="votre@email.com"></div>
+          <div class="input-wrap"><label>Mot de passe</label><input type="password" id="login-pass" placeholder="Votre mot de passe"></div>
+          <button class="btn-copper" onclick="doLogin()" style="margin-top:24px">Se connecter</button>
           <button class="btn-link" onclick="navigateTo('screen-signup')">Pas encore de compte ? <strong>Inscription</strong></button>
         </div>
       </div>
@@ -61,16 +60,16 @@
           <h2 class="page-title">Creer un compte</h2>
           <p class="page-sub">Pour commencer a ecrire vos voyages</p>
           <div class="input-row">
-            <div class="input-wrap"><label>Prenom</label><input type="text" placeholder="Raph"></div>
-            <div class="input-wrap"><label>Nom</label><input type="text" placeholder="Dupont"></div>
+            <div class="input-wrap"><label>Prenom</label><input type="text" id="signup-first" placeholder="Raph"></div>
+            <div class="input-wrap"><label>Nom</label><input type="text" id="signup-last" placeholder="Dupont"></div>
           </div>
-          <div class="input-wrap"><label>Email</label><input type="email" placeholder="votre@email.com"></div>
-          <div class="input-wrap"><label>Mot de passe</label><input type="password" placeholder="Min. 8 caracteres"></div>
+          <div class="input-wrap"><label>Email</label><input type="email" id="signup-email" placeholder="votre@email.com"></div>
+          <div class="input-wrap"><label>Mot de passe</label><input type="password" id="signup-pass" placeholder="Min. 8 caracteres"></div>
           <div class="input-row">
-            <div class="input-wrap"><label>Code postal</label><input type="text" placeholder="31000"></div>
-            <div class="input-wrap"><label>Ville</label><input type="text" placeholder="Toulouse"></div>
+            <div class="input-wrap"><label>Code postal</label><input type="text" id="signup-zip" placeholder="31000"></div>
+            <div class="input-wrap"><label>Ville</label><input type="text" id="signup-city" placeholder="Toulouse"></div>
           </div>
-          <button class="btn-main" onclick="doSignup()" style="margin-top:16px">Creer mon compte</button>
+          <button class="btn-copper" onclick="doSignup()" style="margin-top:16px">Creer mon compte</button>
           <button class="btn-link" onclick="navigateTo('screen-login')">Deja un compte ? <strong>Connexion</strong></button>
         </div>
       </div>
@@ -85,24 +84,29 @@
             </div>
             <div class="avatar" onclick="navigateTo('screen-profile')">R</div>
           </div>
-          <div class="trip-list" id="trip-list"></div>
-          <button class="fab" onclick="navigateTo('screen-newtrip')">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          <button class="btn-new-trip" onclick="navigateTo('screen-newtrip')">
+            <span class="btn-new-trip-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
+            <span>Nouveau voyage</span>
           </button>
+          <div class="trip-list" id="trip-list"></div>
         </div>
       </div>
 
-      <!-- NEW TRIP -->
+      <!-- NEW TRIP: Step 1 - Name + Dates + Style -->
       <div class="screen" id="screen-newtrip">
         <div class="screen-top">
           <button class="btn-back" onclick="navigateTo('screen-home')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+          <span class="screen-label">Etape 1/5</span>
+          <div style="width:24px"></div>
         </div>
+        <div class="step-bar"><div class="step-bar-fill" style="width:20%"></div></div>
         <div class="screen-scroll">
           <h2 class="page-title">Nouveau voyage</h2>
-          <div class="input-wrap"><label>Nom du voyage</label><input type="text" placeholder="Ex: Escapade a Lisbonne"></div>
+          <p class="page-sub">Donnez un nom et choisissez vos dates</p>
+          <div class="input-wrap"><label>Nom du voyage</label><input type="text" id="trip-name" placeholder="Ex: Escapade a Lisbonne"></div>
           <div class="input-row">
-            <div class="input-wrap"><label>Debut</label><input type="date"></div>
-            <div class="input-wrap"><label>Fin</label><input type="date"></div>
+            <div class="input-wrap"><label>Debut</label><input type="date" id="trip-start"></div>
+            <div class="input-wrap"><label>Fin</label><input type="date" id="trip-end"></div>
           </div>
           <div class="input-wrap">
             <label>Style narratif</label>
@@ -113,21 +117,94 @@
               <button class="chip" onclick="pickChip(this)">Pour enfants</button>
             </div>
           </div>
-          <button class="btn-main" onclick="createTrip()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-            Importer les photos
-          </button>
+          <button class="btn-copper" onclick="goToWalletCheck()">Continuer</button>
         </div>
       </div>
 
-      <!-- SWIPE -->
-      <div class="screen" id="screen-swipe">
+      <!-- NEW TRIP: Step 2 - Wallet Check -->
+      <div class="screen" id="screen-wallet-check">
         <div class="screen-top">
           <button class="btn-back" onclick="navigateTo('screen-newtrip')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
-          <span class="screen-label">Validez vos lieux</span>
+          <span class="screen-label">Etape 2/5</span>
           <div style="width:24px"></div>
         </div>
-        <div class="swipe-bar"><div class="swipe-bar-fill" id="swipe-bar-fill"></div></div>
+        <div class="step-bar"><div class="step-bar-fill" style="width:40%"></div></div>
+        <div class="screen-scroll">
+          <h2 class="page-title">Wallet</h2>
+          <p class="page-sub">Carte d'embarquement detectee</p>
+          <div class="wallet-check-card" id="wallet-check-card">
+            <div class="wcc-airline">
+              <div class="wcc-airline-logo" style="background:#C8102E">JAL</div>
+              <div class="wcc-airline-info">
+                <div class="wcc-airline-name">Japan Airlines</div>
+                <div class="wcc-flight">Vol JL045</div>
+              </div>
+              <span class="wcc-detected-tag">Detectee</span>
+            </div>
+            <div class="wcc-route">
+              <div class="wcc-airport">
+                <span class="wcc-code">CDG</span>
+                <span class="wcc-city">Paris</span>
+              </div>
+              <div class="wcc-arrow">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </div>
+              <div class="wcc-airport">
+                <span class="wcc-code">NRT</span>
+                <span class="wcc-city">Tokyo</span>
+              </div>
+            </div>
+            <div class="wcc-details">
+              <div class="wcc-detail"><span class="wcc-detail-label">Date</span><span class="wcc-detail-value">8 Janv. 2026</span></div>
+              <div class="wcc-detail"><span class="wcc-detail-label">Siege</span><span class="wcc-detail-value">23A</span></div>
+              <div class="wcc-detail"><span class="wcc-detail-label">Passager</span><span class="wcc-detail-value">Raph Dupont</span></div>
+            </div>
+          </div>
+          <div class="wallet-check-actions">
+            <button class="btn-copper" onclick="goToPhotoImport()">Confirmer et continuer</button>
+            <button class="btn-ghost-dark" onclick="goToPhotoImport()">Passer cette etape</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEW TRIP: Step 3 - Photo Import -->
+      <div class="screen" id="screen-photo-import">
+        <div class="screen-top">
+          <button class="btn-back" onclick="navigateTo('screen-wallet-check')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+          <span class="screen-label">Etape 3/5</span>
+          <div style="width:24px"></div>
+        </div>
+        <div class="step-bar"><div class="step-bar-fill" style="width:60%"></div></div>
+        <div class="screen-scroll">
+          <h2 class="page-title">Photos</h2>
+          <p class="page-sub">Importez les photos de votre voyage</p>
+          <div class="photo-import-zone" id="photo-import-zone">
+            <div class="photo-import-empty" id="photo-import-empty">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--copper)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              <p>Aucune photo importee</p>
+              <button class="btn-copper" onclick="triggerPhotoImport()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                Importer depuis la galerie
+              </button>
+            </div>
+            <div class="photo-import-grid" id="photo-import-grid" style="display:none"></div>
+            <div class="photo-import-footer" id="photo-import-footer" style="display:none">
+              <div class="photo-count" id="photo-count">0 photos selectionnees</div>
+              <button class="btn-copper-sm" onclick="triggerPhotoImport()">+ Ajouter</button>
+            </div>
+          </div>
+          <button class="btn-copper" onclick="goToSwipe()" id="btn-photos-continue" style="margin-top:16px">Continuer</button>
+        </div>
+      </div>
+
+      <!-- NEW TRIP: Step 4 - Swipe Validation -->
+      <div class="screen" id="screen-swipe">
+        <div class="screen-top">
+          <button class="btn-back" onclick="navigateTo('screen-photo-import')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+          <span class="screen-label">Etape 4/5</span>
+          <div style="width:24px"></div>
+        </div>
+        <div class="step-bar"><div class="step-bar-fill" style="width:80%"></div></div>
         <p class="swipe-count" id="swipe-count">1 / 5</p>
         <div class="swipe-zone" id="swipe-zone"></div>
         <div class="swipe-actions">
@@ -136,10 +213,10 @@
         </div>
       </div>
 
-      <!-- GENERATING -->
+      <!-- NEW TRIP: Step 5 - Generating -->
       <div class="screen" id="screen-generating">
         <div class="gen-wrap">
-          <div class="gen-anim"><div class="gen-ring"></div><span>&#10024;</span></div>
+          <div class="gen-anim"><div class="gen-ring"></div><span class="gen-sparkle">*</span></div>
           <h2 class="gen-title">L'IA ecrit votre histoire...</h2>
           <div class="gen-steps">
             <div class="gen-step" id="gen-step-1"><span class="gen-dot"></span> Analyse des photos</div>
@@ -156,8 +233,9 @@
           <div class="carnet-cover-overlay">
             <button class="btn-back btn-back-w" onclick="navigateTo('screen-home')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
             <div class="carnet-cover-text">
+              <span class="carnet-style-tag" id="carnet-style-tag">Poetique</span>
               <h1 class="carnet-h" id="carnet-h">Lisbonne</h1>
-              <p class="carnet-sub" id="carnet-sub">Portugal — 6 jours</p>
+              <p class="carnet-sub" id="carnet-sub">Portugal - 6 jours</p>
             </div>
           </div>
         </div>
@@ -165,44 +243,50 @@
         <div class="carnet-body" id="carnet-body"></div>
         <div class="carnet-footer">
           <button class="btn-outline" onclick="navigateTo('screen-pdf')">Exporter PDF</button>
-          <button class="btn-outline" onclick="showChat()">Modifier avec l'IA</button>
+          <button class="btn-outline" onclick="showChat()">Modifier</button>
+        </div>
+      </div>
+
+      <!-- WALLET -->
+      <div class="screen" id="screen-wallet">
+        <div class="screen-scroll">
+          <h2 class="page-title" style="padding-top:4px">Wallet</h2>
+          <p class="page-sub">Vos cartes d'embarquement</p>
+          <div class="wallet-list" id="wallet-list"></div>
         </div>
       </div>
 
       <!-- MAP -->
       <div class="screen" id="screen-map">
         <div class="screen-scroll">
-          <h2 class="page-title" style="padding:4px 24px 0">Mon monde</h2>
+          <h2 class="page-title" style="padding:4px 0 0">Mon monde</h2>
           <div class="map-kpis">
-            <div class="kpi"><span class="kpi-v" id="kpi-pays">3</span><span class="kpi-l">Pays</span></div>
-            <div class="kpi"><span class="kpi-v" id="kpi-voyages">3</span><span class="kpi-l">Voyages</span></div>
-            <div class="kpi"><span class="kpi-v" id="kpi-km">14 200</span><span class="kpi-l">km</span></div>
+            <div class="kpi"><span class="kpi-v">3</span><span class="kpi-l">Pays</span></div>
+            <div class="kpi"><span class="kpi-v">3</span><span class="kpi-l">Voyages</span></div>
+            <div class="kpi"><span class="kpi-v">14 200</span><span class="kpi-l">km</span></div>
           </div>
           <div class="map-wrap" id="map-wrap"><svg id="world-map" viewBox="0 0 960 500"></svg></div>
           <div class="map-btns" id="map-btns"></div>
         </div>
       </div>
 
-      <!-- PDF -->
+      <!-- PDF TEMPLATE SELECTOR -->
       <div class="screen" id="screen-pdf">
         <div class="screen-top">
           <button class="btn-back" onclick="goBackFromPdf()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
-          <span class="screen-label">Export</span>
+          <span class="screen-label">Export PDF</span>
           <div style="width:24px"></div>
         </div>
         <div class="screen-scroll pdf-scroll">
+          <p class="page-sub" style="text-align:center;margin-bottom:16px">Choisissez un template</p>
+          <div class="pdf-templates" id="pdf-templates"></div>
           <div class="pdf-mock">
             <div class="pdf-mock-cover" id="pdf-mock-cover"></div>
             <h3 class="pdf-mock-title" id="pdf-mock-title">Lisbonne</h3>
             <p class="pdf-mock-date" id="pdf-mock-date">Mars 2026</p>
             <p class="pdf-mock-brand">TravelBook</p>
           </div>
-          <div class="pdf-formats">
-            <button class="pdf-fmt active" onclick="pickFmt(this)"><span>PDF A5</span><small>Inclus</small></button>
-            <button class="pdf-fmt" onclick="pickFmt(this)"><span>Broche</span><small>24,90 EUR</small></button>
-            <button class="pdf-fmt" onclick="pickFmt(this)"><span>Premium</span><small>39,90 EUR</small></button>
-          </div>
-          <button class="btn-main" onclick="downloadPdf()">Telecharger</button>
+          <button class="btn-copper" onclick="downloadPdf()" style="margin-top:16px">Telecharger le PDF</button>
         </div>
       </div>
 
@@ -221,15 +305,15 @@
           </div>
           <div class="prof-section">
             <h3>Compagnons</h3>
-            <div class="prof-companion"><div class="comp-av">M</div><div><strong>Marie</strong><br><small>Conjointe — 2 voyages</small></div></div>
-            <div class="prof-companion"><div class="comp-av">L</div><div><strong>Lucas</strong><br><small>Ami — 1 voyage</small></div></div>
-            <div class="prof-companion"><div class="comp-av">E</div><div><strong>Emma</strong><br><small>Amie — 1 voyage</small></div></div>
+            <div class="prof-companion"><div class="comp-av">M</div><div><strong>Marie</strong><br><small>Conjointe - 2 voyages</small></div></div>
+            <div class="prof-companion"><div class="comp-av">L</div><div><strong>Lucas</strong><br><small>Ami - 1 voyage</small></div></div>
+            <div class="prof-companion"><div class="comp-av">E</div><div><strong>Emma</strong><br><small>Amie - 1 voyage</small></div></div>
           </div>
           <div class="prof-section">
             <h3>Preferences</h3>
             <div class="pref"><span>Style par defaut</span><span class="pref-v">Poetique</span></div>
             <div class="pref"><span>Mode sombre</span><label class="switch"><input type="checkbox" id="dark-mode-toggle"><span class="slider"></span></label></div>
-            <div class="pref"><span>Notifications mood</span><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+            <div class="pref"><span>Notifications</span><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
           </div>
           <button class="btn-link danger" onclick="logout()" style="margin-top:12px">Se deconnecter</button>
         </div>
@@ -247,6 +331,10 @@
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
         <span>Carte</span>
       </button>
+      <button class="nav-btn" data-screen="screen-wallet" onclick="navTo('screen-wallet')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 12h2"/></svg>
+        <span>Wallet</span>
+      </button>
       <button class="nav-btn" data-screen="screen-profile" onclick="navTo('screen-profile')">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         <span>Profil</span>
@@ -256,6 +344,7 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
   <script src="js/data.js"></script>
   <script src="js/pexels.js"></script>
   <script src="js/app.js"></script>

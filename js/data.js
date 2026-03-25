@@ -1,9 +1,9 @@
-// TravelBook — Data v4 (rich narratives + companion mentions + Pexels queries)
+// TravelBook v6 — Data (rich narratives + companions + boarding passes + PDF templates)
 const PX = (id, w=800) => `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}`;
 const WK = (path) => `https://upload.wikimedia.org/wikipedia/commons/${path}`;
 
 const IMG = {
-  splash: PX(2265876),  // woman looking at map, travel
+  splash: PX(2265876),
   lisbon1: PX(5069524), lisbon2: PX(16343720),
   belem: WK('thumb/6/65/Torre_Bel%C3%A9m_April_2009-4a.jpg/800px-Torre_Bel%C3%A9m_April_2009-4a.jpg'),
   alfama: WK('thumb/0/07/Lisbon_alfalma.jpg/800px-Lisbon_alfalma.jpg'),
@@ -30,7 +30,7 @@ const IMG = {
   khan: WK('7/74/%D8%AE%D8%A7%D9%86_%D8%A7%D9%84%D8%AE%D9%84%D9%8A%D9%84%D9%8A_1.jpg')
 };
 
-// Companions with roles (for face detection simulation)
+// Companions with roles and gender (for face detection simulation)
 const COMPANIONS = {
   raph: { name: "Raph", role: "Voyageur", gender: "M" },
   marie: { name: "Marie", role: "Conjointe", gender: "F" },
@@ -38,11 +38,132 @@ const COMPANIONS = {
   emma: { name: "Emma", role: "Amie", gender: "F" }
 };
 
+// Boarding passes for the Wallet
+const BOARDING_PASSES = [
+  {
+    id: 'bp-1',
+    airline: 'JAL',
+    airlineFull: 'Japan Airlines',
+    flight: 'JL045',
+    from: 'CDG',
+    fromCity: 'Paris Charles de Gaulle',
+    to: 'NRT',
+    toCity: 'Tokyo Narita',
+    date: '8 Janv. 2026',
+    dateRaw: '2026-01-08',
+    time: '11:25',
+    arrival: '06:45+1',
+    seat: '23A',
+    passenger: 'DUPONT/RAPH',
+    gate: 'K42',
+    boarding: '10:45',
+    class: 'Economy',
+    color: '#C8102E',
+    voyageId: 2
+  },
+  {
+    id: 'bp-2',
+    airline: 'TAP',
+    airlineFull: 'TAP Air Portugal',
+    flight: 'TP435',
+    from: 'TLS',
+    fromCity: 'Toulouse Blagnac',
+    to: 'LIS',
+    toCity: 'Lisbonne Portela',
+    date: '15 Mars 2026',
+    dateRaw: '2026-03-15',
+    time: '08:15',
+    arrival: '09:30',
+    seat: '12F',
+    passenger: 'DUPONT/RAPH',
+    gate: 'B14',
+    boarding: '07:35',
+    class: 'Economy',
+    color: '#00965E',
+    voyageId: 1
+  },
+  {
+    id: 'bp-3',
+    airline: 'MS',
+    airlineFull: 'EgyptAir',
+    flight: 'MS800',
+    from: 'CDG',
+    fromCity: 'Paris Charles de Gaulle',
+    to: 'CAI',
+    toCity: 'Le Caire International',
+    date: '1 Fev. 2026',
+    dateRaw: '2026-02-01',
+    time: '14:10',
+    arrival: '19:35',
+    seat: '8B',
+    passenger: 'DUPONT/RAPH',
+    gate: 'E26',
+    boarding: '13:30',
+    class: 'Economy',
+    color: '#002B5C',
+    voyageId: 3
+  }
+];
+
+// PDF Templates
+const PDF_TEMPLATES = [
+  {
+    id: 'classique',
+    name: 'Classique',
+    desc: 'Mise en page epuree et elegante',
+    price: null,
+    priceLabel: 'Inclus',
+    preview: 'linear-gradient(135deg, #FAF7F2 0%, #F5F0E8 100%)',
+    accent: '#1A1410',
+    style: 'clean'
+  },
+  {
+    id: 'magazine',
+    name: 'Magazine',
+    desc: 'Style editorial, grandes photos',
+    price: null,
+    priceLabel: 'Inclus',
+    preview: 'linear-gradient(135deg, #E8E0D4 0%, #D4C4B0 100%)',
+    accent: '#C8864A',
+    style: 'editorial'
+  },
+  {
+    id: 'aventure',
+    name: 'Aventure',
+    desc: 'Tons chauds, esprit carnet de route',
+    price: null,
+    priceLabel: 'Inclus',
+    preview: 'linear-gradient(135deg, #E8D9C0 0%, #C8864A 100%)',
+    accent: '#7A8C6E',
+    style: 'rustic'
+  },
+  {
+    id: 'premium-luxe',
+    name: 'Premium Luxe',
+    desc: 'Accents dores, photos pleine page',
+    price: 4.99,
+    priceLabel: '4,99 EUR',
+    preview: 'linear-gradient(135deg, #1A1410 0%, #3A2A1A 100%)',
+    accent: '#D4A866',
+    style: 'luxe'
+  },
+  {
+    id: 'premium-editorial',
+    name: 'Premium Editorial',
+    desc: 'Style journal, colonnes de texte',
+    price: 4.99,
+    priceLabel: '4,99 EUR',
+    preview: 'linear-gradient(135deg, #F5F0E8 0%, #E0D8CC 100%)',
+    accent: '#1A1410',
+    style: 'newspaper'
+  }
+];
+
 const VOYAGES = [
   {
     id:1, name:"Lisbonne", country:"Portugal", dates:"15-20 Mars 2026", days:6,
     companions:["Marie"], stats:{photos:247,lieux:6,mots:4800,temp:"22 C"},
-    badge:"ok", cover:IMG.lisbon1,
+    badge:"ok", cover:IMG.lisbon1, style:"Poetique",
     chapters:[
       { day:"Jour 1", title:"Belem, ou le temps s'arrete",
         pexelsQuery:"belem tower lisbon sunset",
@@ -91,7 +212,7 @@ const VOYAGES = [
   {
     id:2, name:"Tokyo", country:"Japon", dates:"8-11 Janv. 2026", days:4,
     companions:["Lucas","Emma"], stats:{photos:183,lieux:8,mots:3200,temp:"4 C"},
-    badge:"pdf", cover:IMG.sensoji,
+    badge:"pdf", cover:IMG.sensoji, style:"Journalistique",
     chapters:[
       { day:"Jour 1", title:"Asakusa : le choc des mondes",
         pexelsQuery:"sensoji temple tokyo red gate lantern",
@@ -126,7 +247,7 @@ const VOYAGES = [
   {
     id:3, name:"Egypte", country:"Egypte", dates:"1-10 Fev. 2026", days:10,
     companions:["Marie"], stats:{photos:412,lieux:12,mots:8100,temp:"29 C"},
-    badge:"ok", cover:IMG.pyramids,
+    badge:"ok", cover:IMG.pyramids, style:"Poetique",
     chapters:[
       { day:"Jour 1", title:"Le Caire, le vertige des sens",
         pexelsQuery:"cairo egypt museum tahrir square",
