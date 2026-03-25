@@ -91,12 +91,12 @@ function downloadPdf() {
   const pw = isLand ? '297mm' : (Array.isArray(tpl.format) ? '210mm' : '148mm');
   const ph = isLand ? '210mm' : '210mm';
 
-  // Build chapters
+  // Build chapters — each chapter = 1 text spread + 1 photo spread
   let chaptersHtml = '';
   v.chapters.forEach((ch, i) => {
     const photos = gSel(ch);
     const hero = photos.length ? photos[0].url : '';
-    const extra = photos.slice(1, 7);
+    const allPhotos = photos.map(p => p.url);
     const q = quotes[i % quotes.length];
     const companions = gFaces(ch);
     const layout = i % 3;
@@ -105,22 +105,39 @@ function downloadPdf() {
     const placeHtml = `<div class="place-card"><h4>${ch.place.name}</h4><p>${ch.place.address} · ${ch.place.duration}</p><span class="stars">${'★'.repeat(Math.round(ch.place.rating))} ${ch.place.rating}</span></div>`;
     const quoteHtml = `<div class="quote"><p>"${q.text}"</p><span>— ${q.attr}</span></div>`;
 
+    // === SPREAD 1: Full-page hero photo ===
+    if (hero) {
+      chaptersHtml += `
+      <div class="page photo-page">
+        <img src="${hero}" class="full-bg">
+        <div class="photo-page-ov">
+          <div class="photo-page-top"><span class="photo-page-day">${ch.day.toUpperCase()}</span></div>
+          <div class="photo-page-bot">
+            <h2 class="photo-page-title">${ch.title}</h2>
+            <p class="photo-page-place">${ch.place.name} · ${ch.place.duration}</p>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // === SPREAD 2: Text + photos side by side ===
     if (layout === 0) {
       chaptersHtml += `
       <div class="page spread">
         <div class="half left">
           <h2 class="ch-title">${ch.title.toUpperCase()}</h2>
           <div class="text-wrap">
-            ${extra.length ? `<img src="${extra[0]?.url || hero}" class="float-left">` : ''}
+            ${allPhotos[1] ? `<img src="${allPhotos[1]}" class="float-left">` : ''}
             <p class="dropcap">${ch.text}</p>
           </div>
+          ${allPhotos[2] ? `<img src="${allPhotos[2]}" class="img-bottom">` : ''}
           ${facesHtml}
         </div>
         <div class="half right side-bg">
           <h2 class="sec-title">HIGHLIGHTS</h2>
           <div class="sec-bar">${ch.day.toUpperCase()}</div>
-          ${hero ? `<img src="${hero}" class="hero-img">` : ''}
-          ${extra.length >= 3 ? `<div class="grid3">${extra.slice(0, 3).map(p => `<img src="${p.url}">`).join('')}</div>` : ''}
+          ${allPhotos[3] ? `<img src="${allPhotos[3]}" class="hero-img">` : ''}
+          ${allPhotos.length >= 6 ? `<div class="grid3">${allPhotos.slice(4, 7).map(u => `<img src="${u}">`).join('')}</div>` : (allPhotos.length >= 5 ? `<div class="grid2">${allPhotos.slice(4, 6).map(u => `<img src="${u}">`).join('')}</div>` : '')}
           ${placeHtml}${quoteHtml}
         </div>
       </div>`;
@@ -128,9 +145,9 @@ function downloadPdf() {
       chaptersHtml += `
       <div class="page spread">
         <div class="half left photo-full">
-          ${hero ? `<img src="${hero}" class="cover-img">` : `<div class="cover-img" style="background:${C.accent}"></div>`}
-          <div class="photo-badge">${ch.day}</div>
-          ${extra.length ? `<img src="${extra[0]?.url || ''}" class="polaroid">` : ''}
+          ${allPhotos[1] ? `<img src="${allPhotos[1]}" class="cover-img">` : `<div class="cover-img" style="background:${C.accent}"></div>`}
+          <div class="photo-badge">${ch.place.name}</div>
+          ${allPhotos[2] ? `<img src="${allPhotos[2]}" class="polaroid">` : ''}
         </div>
         <div class="half right side-bg">
           <h2 class="ch-title">${ch.title.toUpperCase()}</h2>
@@ -143,19 +160,77 @@ function downloadPdf() {
       chaptersHtml += `
       <div class="page spread">
         <div class="half left">
-          ${hero ? `<img src="${hero}" class="top-photo">` : ''}
+          ${allPhotos[1] ? `<img src="${allPhotos[1]}" class="top-photo">` : ''}
           <h2 class="ch-title">${ch.title.toUpperCase()}</h2>
           <div class="subsec"><span class="chev">›</span><h4>${ch.place.name}</h4></div>
           <p>${splitAtSentence(ch.text, 0)}</p>
+          ${allPhotos[2] ? `<img src="${allPhotos[2]}" class="img-bottom">` : ''}
           <div class="subsec"><span class="chev">›</span><h4>Impressions</h4></div>
           <p>${splitAtSentence(ch.text, 1)}</p>
         </div>
         <div class="half right side-bg">
           <h2 class="sec-title">INFOS & PHOTOS</h2>
-          ${extra.length >= 2 ? `<div class="photo-stack"><img src="${extra[0]?.url || hero}" class="stack-main"><div class="stack-side">${extra.slice(1, 3).map(p => `<img src="${p.url}">`).join('')}</div></div>` : (hero ? `<img src="${hero}" class="hero-img">` : '')}
+          ${allPhotos.length >= 4 ? `<div class="photo-stack"><img src="${allPhotos[3]}" class="stack-main"><div class="stack-side">${allPhotos.slice(4, 6).map(u => `<img src="${u}">`).join('')}</div></div>` : (allPhotos[3] ? `<img src="${allPhotos[3]}" class="hero-img">` : '')}
           ${placeHtml}${quoteHtml}${facesHtml}
         </div>
       </div>`;
+    }
+
+    // === SPREAD 3: Photo gallery page (if enough photos) ===
+    if (allPhotos.length >= 4) {
+      const galleryPhotos = allPhotos.slice(1); // all except hero
+      const gpLayout = i % 4; // vary gallery layouts
+
+      if (gpLayout === 0 && galleryPhotos.length >= 4) {
+        // Collage: 1 big left + 3 small right
+        chaptersHtml += `
+        <div class="page spread gallery-page">
+          <div class="gal-big"><img src="${galleryPhotos[0]}"><div class="gal-caption">${ch.place.name}</div></div>
+          <div class="gal-side">
+            ${galleryPhotos.slice(1, 4).map(u => `<div class="gal-side-img"><img src="${u}"></div>`).join('')}
+          </div>
+        </div>`;
+      } else if (gpLayout === 1 && galleryPhotos.length >= 6) {
+        // Grid 2x3
+        chaptersHtml += `
+        <div class="page gallery-page">
+          <div class="gal-grid6">
+            ${galleryPhotos.slice(0, 6).map(u => `<img src="${u}">`).join('')}
+          </div>
+          <div class="gal-bar">${ch.day} · ${ch.place.name} · ${galleryPhotos.length} photos</div>
+        </div>`;
+      } else if (gpLayout === 2 && galleryPhotos.length >= 3) {
+        // Cinema strip: 3 wide horizontal
+        chaptersHtml += `
+        <div class="page gallery-page gal-cinema">
+          <div class="gal-cinema-strip">
+            ${galleryPhotos.slice(0, 3).map(u => `<div class="gal-cinema-frame"><img src="${u}"></div>`).join('')}
+          </div>
+          ${galleryPhotos.length >= 6 ? `<div class="gal-cinema-strip">${galleryPhotos.slice(3, 6).map(u => `<div class="gal-cinema-frame"><img src="${u}"></div>`).join('')}</div>` : ''}
+          <div class="gal-bar">${ch.place.name} — ${ch.day}</div>
+        </div>`;
+      } else if (galleryPhotos.length >= 5) {
+        // Mosaic: 2 big top + 3 small bottom
+        chaptersHtml += `
+        <div class="page gallery-page">
+          <div class="gal-mosaic-top">
+            <img src="${galleryPhotos[0]}"><img src="${galleryPhotos[1]}">
+          </div>
+          <div class="gal-mosaic-bot">
+            ${galleryPhotos.slice(2, 5).map(u => `<img src="${u}">`).join('')}
+          </div>
+          <div class="gal-bar">${ch.day} · ${ch.place.name}</div>
+        </div>`;
+      } else {
+        // Simple 2x2
+        chaptersHtml += `
+        <div class="page gallery-page">
+          <div class="gal-grid4">
+            ${galleryPhotos.slice(0, 4).map(u => `<img src="${u}">`).join('')}
+          </div>
+          <div class="gal-bar">${ch.day} · ${ch.place.name}</div>
+        </div>`;
+      }
     }
   });
 
@@ -281,6 +356,55 @@ function downloadPdf() {
   .last-line{width:50px;height:2px;background:${C.accent};margin:12px 0}
 
   ${S.handFont ? `.ch-title{font-family:${S.handFont};letter-spacing:0;font-size:${isLand?'28px':'22px'}}` : ''}
+
+  /* FULL PAGE PHOTO */
+  .photo-page{position:relative}
+  .full-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .photo-page-ov{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.3) 0%,transparent 30%,transparent 60%,rgba(0,0,0,.6) 100%);display:flex;flex-direction:column;justify-content:space-between;padding:22px 28px}
+  .photo-page-top{display:flex;align-items:center}
+  .photo-page-day{font:600 10px ${S.bodyFont};color:${C.accent};background:rgba(0,0,0,.4);padding:4px 14px;border-radius:4px;letter-spacing:4px;backdrop-filter:blur(4px)}
+  .photo-page-bot{margin-top:auto}
+  .photo-page-title{font:900 ${isLand?'36px':'26px'} ${S.titleFont};color:white;text-shadow:0 3px 20px rgba(0,0,0,.4);line-height:1.1;margin-bottom:6px}
+  .photo-page-place{font:400 12px ${S.bodyFont};color:rgba(255,255,255,.7)}
+
+  /* EXTRA IN-TEXT PHOTOS */
+  .img-bottom{width:100%;height:${isLand?'120px':'90px'};object-fit:cover;border-radius:5px;margin:8px 0;box-shadow:0 3px 12px rgba(0,0,0,.1)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px}
+  .grid2 img{width:100%;height:${isLand?'100px':'80px'};object-fit:cover;border-radius:4px}
+
+  /* GALLERY PAGES */
+  .gallery-page{overflow:hidden;position:relative}
+
+  /* Collage: big left + 3 small right */
+  .gal-big{width:55%;height:100%;position:absolute;left:0;top:0}
+  .gal-big img{width:100%;height:100%;object-fit:cover}
+  .gal-big .gal-caption{position:absolute;bottom:14px;left:14px;background:rgba(0,0,0,.5);color:white;padding:5px 14px;border-radius:5px;font:500 11px ${S.bodyFont};backdrop-filter:blur(4px)}
+  .gal-side{position:absolute;right:0;top:0;width:45%;height:100%;display:flex;flex-direction:column}
+  .gal-side-img{flex:1;overflow:hidden}
+  .gal-side-img img{width:100%;height:100%;object-fit:cover}
+
+  /* Grid 2x3 */
+  .gal-grid6{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;height:calc(100% - 30px);gap:3px;padding:3px}
+  .gal-grid6 img{width:100%;height:100%;object-fit:cover}
+
+  /* Grid 2x2 */
+  .gal-grid4{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;height:calc(100% - 30px);gap:3px;padding:3px}
+  .gal-grid4 img{width:100%;height:100%;object-fit:cover}
+
+  /* Cinema strip */
+  .gal-cinema{display:flex;flex-direction:column;padding:0}
+  .gal-cinema-strip{display:flex;flex:1;gap:3px}
+  .gal-cinema-frame{flex:1;overflow:hidden}
+  .gal-cinema-frame img{width:100%;height:100%;object-fit:cover}
+
+  /* Mosaic */
+  .gal-mosaic-top{display:grid;grid-template-columns:1fr 1fr;gap:3px;height:55%;padding:3px 3px 0}
+  .gal-mosaic-top img{width:100%;height:100%;object-fit:cover;border-radius:0}
+  .gal-mosaic-bot{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;height:calc(45% - 30px);padding:3px}
+  .gal-mosaic-bot img{width:100%;height:100%;object-fit:cover}
+
+  /* Gallery caption bar */
+  .gal-bar{height:27px;display:flex;align-items:center;justify-content:center;font:500 10px ${S.bodyFont};color:${C.muted};letter-spacing:1px;text-transform:uppercase;background:${C.bg2}}
 
   .toolbar{position:fixed;bottom:0;left:0;right:0;background:#1a1410;padding:14px 20px;display:flex;gap:10px;justify-content:center;z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,.3)}
   .toolbar button{padding:12px 24px;border:none;border-radius:8px;font:600 14px ${S.bodyFont};cursor:pointer;transition:all .2s}
