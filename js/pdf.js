@@ -590,186 +590,165 @@ function generatePhotoBookHtml(v, tpl, S) {
   .btn-flip{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white}
   .btn-flip:hover{opacity:.85}
 
-  /* ===== PDF.JS VIEWER OVERLAY ===== */
-  #pdfjs-overlay{position:fixed;inset:0;background:#404040;display:none;flex-direction:column;z-index:1000}
-  #pdfjs-overlay.active{display:flex}
-  #pdfjs-toolbar{background:#323232;padding:8px 16px;display:flex;align-items:center;justify-content:center;gap:12px;border-bottom:1px solid #555;flex-shrink:0}
-  #pdfjs-toolbar button{padding:8px 16px;border:none;border-radius:6px;font:600 12px ${S.bodyFont};cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .2s}
-  #pdfjs-toolbar button:hover{opacity:.85}
-  .pdfjs-nav{background:#555;color:white;font-size:18px;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;padding:0}
-  .pdfjs-info{color:rgba(255,255,255,.6);font:400 12px ${S.bodyFont};min-width:80px;text-align:center}
-  .pdfjs-close{position:absolute;right:12px;background:#555;color:white;border-radius:50%;width:36px;height:36px;font-size:18px;display:flex;align-items:center;justify-content:center}
-  .pdfjs-zoom{background:#555;color:white}
-  .pdfjs-dl{background:#c8864a;color:white}
-  .pdfjs-print{background:white;color:#333}
-  #pdfjs-canvas-container{flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:20px;gap:12px}
-  #pdfjs-canvas-container canvas{box-shadow:0 4px 20px rgba(0,0,0,.4);background:white}
-  .pdfjs-loading{color:rgba(255,255,255,.5);font:400 14px ${S.bodyFont};text-align:center;padding:40px}
+  /* ===== FLIPBOOK VIEWER (PDF.js + StPageFlip) ===== */
+  #flip-overlay{position:fixed;inset:0;background:#2a2a2a;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:1000}
+  #flip-overlay.active{display:flex}
+  #flip-container{position:relative;flex:1;display:flex;align-items:center;justify-content:center}
+  .stf__parent{box-shadow:0 10px 50px rgba(0,0,0,.5)}
+  #flip-toolbar{background:rgba(30,30,30,.95);padding:10px 20px;display:flex;align-items:center;justify-content:center;gap:12px;width:100%;border-top:1px solid #444}
+  #flip-toolbar button{padding:8px 18px;border:none;border-radius:6px;font:600 12px ${S.bodyFont};cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s}
+  #flip-toolbar button:hover{opacity:.85}
+  .fl-nav{background:#555;color:white;font-size:20px;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;padding:0}
+  .fl-info{color:rgba(255,255,255,.5);font:400 12px ${S.bodyFont};min-width:90px;text-align:center}
+  .fl-dl{background:#c8864a;color:white}
+  .fl-print{background:white;color:#333}
+  .fl-close{position:fixed;top:14px;right:14px;background:rgba(255,255,255,.1);color:white;border:none;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;z-index:1002;display:flex;align-items:center;justify-content:center}
+  .fl-close:hover{background:rgba(255,255,255,.2)}
+  .fl-title{position:fixed;top:14px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.5);font:500 13px ${S.bodyFont};letter-spacing:2px;z-index:1002}
+  .fl-loading{color:rgba(255,255,255,.4);font:400 14px ${S.bodyFont}}
 
-  @media print{.toolbar,#pdfjs-overlay{display:none!important}body{background:white}.pb-page{margin:0;box-shadow:none;page-break-after:always}}
+  @media print{.toolbar,#flip-overlay{display:none!important}body{background:white}.pb-page{margin:0;box-shadow:none;page-break-after:always}}
 </style></head><body>
 
 ${pages}
 
 <!-- Normal toolbar -->
 <div class="toolbar" id="normal-toolbar">
-  <button class="btn-flip" onclick="openViewer()">&#128214; Visionneuse</button>
+  <button class="btn-flip" onclick="openFlipbook()">&#128214; Feuilleter</button>
   <button class="btn-print" onclick="window.print()">&#128424; Imprimer</button>
   <button class="btn-pdf" onclick="savePdf()">&#128196; Télécharger PDF</button>
 </div>
 
-<!-- PDF.js Viewer overlay -->
-<div id="pdfjs-overlay">
-  <div id="pdfjs-toolbar">
-    <button class="pdfjs-nav" onclick="pdfPrevPage()">&#8249;</button>
-    <span class="pdfjs-info" id="pdfjs-info">— / —</span>
-    <button class="pdfjs-nav" onclick="pdfNextPage()">&#8250;</button>
-    <span style="width:1px;height:24px;background:#555"></span>
-    <button class="pdfjs-zoom" onclick="pdfZoom(-0.25)">&#8722;</button>
-    <span class="pdfjs-info" id="pdfjs-zoom-info">100%</span>
-    <button class="pdfjs-zoom" onclick="pdfZoom(0.25)">&#43;</button>
-    <button class="pdfjs-zoom" onclick="pdfFitWidth()">Ajuster</button>
-    <span style="width:1px;height:24px;background:#555"></span>
-    <button class="pdfjs-print" onclick="window.print()">&#128424; Imprimer</button>
-    <button class="pdfjs-dl" onclick="pdfDownload()">&#128196; Télécharger</button>
-    <button class="pdfjs-close" onclick="closeViewer()">&times;</button>
-  </div>
-  <div id="pdfjs-canvas-container">
-    <div class="pdfjs-loading" id="pdfjs-loading">Génération du PDF...</div>
+<!-- Flipbook overlay -->
+<div id="flip-overlay">
+  <div class="fl-title">TravelBook — ${v.name}</div>
+  <button class="fl-close" onclick="closeFlip()">&times;</button>
+  <div id="flip-container"></div>
+  <div class="fl-loading" id="fl-loading">Génération du PDF...</div>
+  <div id="flip-toolbar">
+    <button class="fl-nav" onclick="fb.flipPrev()">&#8249;</button>
+    <span class="fl-info" id="fl-info">— / —</span>
+    <button class="fl-nav" onclick="fb.flipNext()">&#8250;</button>
+    <span style="width:1px;height:24px;background:#444"></span>
+    <button class="fl-print" onclick="closeFlip();window.print()">&#128424; Imprimer</button>
+    <button class="fl-dl" onclick="dlPdf()">&#128196; Télécharger</button>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"><\/script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 <script type="module">
 import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs';
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
 
-let pdfDoc = null, pdfBlob = null, currentScale = 1.5, currentPage = 1;
+let fb = null, pdfBlob = null, pageImages = [], ready = false;
+window.fb = { flipPrev(){if(fb)fb.flipPrev()}, flipNext(){if(fb)fb.flipNext()} };
 
-// Generate PDF blob from HTML pages
-async function generatePdfBlob() {
-  const allPages = document.querySelectorAll('.pb-page');
+// Generate PDF blob
+async function genPdf(statusEl) {
+  const pages = document.querySelectorAll('.pb-page');
   const {jsPDF} = window.jspdf;
   const pdf = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   const W = pdf.internal.pageSize.getWidth(), H = pdf.internal.pageSize.getHeight();
-  const loading = document.getElementById('pdfjs-loading');
-  for (let i = 0; i < allPages.length; i++) {
-    if (loading) loading.textContent = 'Rendu page ' + (i+1) + '/' + allPages.length + '...';
+  for (let i = 0; i < pages.length; i++) {
+    if (statusEl) statusEl.textContent = 'Rendu page ' + (i+1) + '/' + pages.length + '...';
     if (i > 0) pdf.addPage();
     try {
-      const c = await html2canvas(allPages[i], {scale:2, useCORS:true, allowTaint:true, width:allPages[i].offsetWidth, height:allPages[i].offsetHeight});
+      const c = await html2canvas(pages[i], {scale:2, useCORS:true, allowTaint:true, width:pages[i].offsetWidth, height:pages[i].offsetHeight});
       pdf.addImage(c.toDataURL('image/jpeg',.85), 'JPEG', 0, 0, W, H);
     } catch(e) { console.warn('Page '+i+' skip:', e); }
   }
   return pdf.output('blob');
 }
 
-// Render a single page to canvas
-async function renderPage(num) {
-  const page = await pdfDoc.getPage(num);
-  const viewport = page.getViewport({scale: currentScale});
-  const canvas = document.createElement('canvas');
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
-  canvas.dataset.page = num;
-  await page.render({canvasContext: canvas.getContext('2d'), viewport}).promise;
-  return canvas;
-}
-
-// Render all pages
-async function renderAllPages() {
-  const container = document.getElementById('pdfjs-canvas-container');
-  container.innerHTML = '';
-  for (let i = 1; i <= pdfDoc.numPages; i++) {
-    const canvas = await renderPage(i);
-    container.appendChild(canvas);
+// Extract page images from PDF using PDF.js
+async function extractPages(blob) {
+  const buf = await blob.arrayBuffer();
+  const doc = await pdfjsLib.getDocument({data: buf}).promise;
+  const imgs = [];
+  for (let i = 1; i <= doc.numPages; i++) {
+    const page = await doc.getPage(i);
+    const vp = page.getViewport({scale: 2});
+    const canvas = document.createElement('canvas');
+    canvas.width = vp.width; canvas.height = vp.height;
+    await page.render({canvasContext: canvas.getContext('2d'), viewport: vp}).promise;
+    imgs.push(canvas.toDataURL('image/jpeg', 0.92));
   }
-  document.getElementById('pdfjs-info').textContent = pdfDoc.numPages + ' pages';
-  document.getElementById('pdfjs-zoom-info').textContent = Math.round(currentScale * 66.7) + '%';
+  return imgs;
 }
 
-// Open viewer
-window.openViewer = async function() {
-  document.getElementById('pdfjs-overlay').classList.add('active');
+// Open flipbook
+window.openFlipbook = async function() {
+  const overlay = document.getElementById('flip-overlay');
+  overlay.classList.add('active');
   document.getElementById('normal-toolbar').style.display = 'none';
-  if (pdfDoc) { renderAllPages(); return; }
-  pdfBlob = await generatePdfBlob();
-  const arrayBuf = await pdfBlob.arrayBuffer();
-  pdfDoc = await pdfjsLib.getDocument({data: arrayBuf}).promise;
-  renderAllPages();
+
+  if (ready) return;
+
+  const loading = document.getElementById('fl-loading');
+
+  // Step 1: Generate PDF
+  loading.textContent = 'Génération du PDF...';
+  if (!pdfBlob) pdfBlob = await genPdf(loading);
+
+  // Step 2: Extract pages with PDF.js
+  loading.textContent = 'Extraction des pages...';
+  pageImages = await extractPages(pdfBlob);
+
+  loading.style.display = 'none';
+
+  // Step 3: Create flipbook with StPageFlip
+  const container = document.getElementById('flip-container');
+  const maxH = window.innerHeight - 80;
+  const maxW = window.innerWidth - 40;
+  let pH = maxH;
+  let pW = Math.round(pH * 0.7071);
+  if (pW * 2 > maxW) { pW = Math.round(maxW / 2); pH = Math.round(pW / 0.7071); }
+
+  fb = new St.PageFlip(container, {
+    width: pW, height: pH, size: 'fixed',
+    minWidth: 200, maxWidth: 600, minHeight: 280, maxHeight: 850,
+    showCover: true, maxShadowOpacity: 0.5, mobileScrollSupport: true,
+    flippingTime: 700, useMouseEvents: true, swipeDistance: 30, drawShadow: true, autoSize: true
+  });
+
+  fb.loadFromImages(pageImages);
+  window.fb = fb;
+
+  fb.on('flip', (e) => {
+    document.getElementById('fl-info').textContent = (e.data + 1) + ' / ' + fb.getPageCount();
+  });
+  document.getElementById('fl-info').textContent = '1 / ' + fb.getPageCount();
+  ready = true;
 };
 
-// Close viewer
-window.closeViewer = function() {
-  document.getElementById('pdfjs-overlay').classList.remove('active');
+window.closeFlip = function() {
+  document.getElementById('flip-overlay').classList.remove('active');
   document.getElementById('normal-toolbar').style.display = 'flex';
 };
 
-// Zoom
-window.pdfZoom = function(delta) {
-  currentScale = Math.max(0.5, Math.min(4, currentScale + delta));
-  renderAllPages();
-};
-window.pdfFitWidth = function() {
-  const containerW = document.getElementById('pdfjs-canvas-container').clientWidth - 40;
-  // A4 at 72dpi = 595px
-  currentScale = containerW / 595;
-  renderAllPages();
-};
-
-// Page nav (scroll to page)
-window.pdfPrevPage = function() {
-  const container = document.getElementById('pdfjs-canvas-container');
-  const canvases = container.querySelectorAll('canvas');
-  // Find current visible
-  let cur = 0;
-  for (let i = 0; i < canvases.length; i++) {
-    const rect = canvases[i].getBoundingClientRect();
-    if (rect.top >= 0) { cur = i; break; }
-  }
-  const prev = Math.max(0, cur - 1);
-  canvases[prev]?.scrollIntoView({behavior:'smooth', block:'start'});
-};
-window.pdfNextPage = function() {
-  const container = document.getElementById('pdfjs-canvas-container');
-  const canvases = container.querySelectorAll('canvas');
-  let cur = 0;
-  for (let i = 0; i < canvases.length; i++) {
-    const rect = canvases[i].getBoundingClientRect();
-    if (rect.top >= 0) { cur = i; break; }
-  }
-  const next = Math.min(canvases.length - 1, cur + 1);
-  canvases[next]?.scrollIntoView({behavior:'smooth', block:'start'});
-};
-
-// Download PDF
-window.pdfDownload = function() {
+window.dlPdf = function() {
   if (!pdfBlob) return;
   const url = URL.createObjectURL(pdfBlob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'TravelBook-${v.name.replace(/[^a-zA-Z0-9]/g, '')}.pdf';
+  const a = document.createElement('a'); a.href = url;
+  a.download = 'TravelBook-${v.name.replace(/[^a-zA-Z0-9]/g, '')}.pdf';
   a.click(); URL.revokeObjectURL(url);
 };
 
-// Save PDF (from normal toolbar)
 window.savePdf = async function() {
   const btn = document.querySelector('.btn-pdf');
   btn.textContent = 'Génération...'; btn.disabled = true;
-  if (!pdfBlob) pdfBlob = await generatePdfBlob();
-  const url = URL.createObjectURL(pdfBlob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'TravelBook-${v.name.replace(/[^a-zA-Z0-9]/g, '')}.pdf';
-  a.click(); URL.revokeObjectURL(url);
+  if (!pdfBlob) pdfBlob = await genPdf(null);
+  window.dlPdf();
   btn.textContent = 'Télécharger PDF'; btn.disabled = false;
 };
 
-// Keyboard nav
 document.addEventListener('keydown', (e) => {
-  if (!document.getElementById('pdfjs-overlay').classList.contains('active')) return;
-  if (e.key === 'Escape') window.closeViewer();
-  if (e.key === '+' || e.key === '=') { e.preventDefault(); window.pdfZoom(0.25); }
-  if (e.key === '-') { e.preventDefault(); window.pdfZoom(-0.25); }
+  if (!document.getElementById('flip-overlay').classList.contains('active')) return;
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); fb.flipNext(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); fb.flipPrev(); }
+  if (e.key === 'Escape') window.closeFlip();
 });
 <\/script>
 </body></html>`;
