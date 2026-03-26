@@ -590,208 +590,186 @@ function generatePhotoBookHtml(v, tpl, S) {
   .btn-flip{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white}
   .btn-flip:hover{opacity:.85}
 
-  /* ===== FLIPBOOK OVERLAY ===== */
-  #flipbook-overlay{position:fixed;inset:0;background:#1a1a1a;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:1000}
-  #flipbook-overlay.active{display:flex}
-  #flipbook-container{position:relative}
-  .stf__parent{box-shadow:0 10px 60px rgba(0,0,0,.5);background:transparent!important}
+  /* ===== PDF.JS VIEWER OVERLAY ===== */
+  #pdfjs-overlay{position:fixed;inset:0;background:#404040;display:none;flex-direction:column;z-index:1000}
+  #pdfjs-overlay.active{display:flex}
+  #pdfjs-toolbar{background:#323232;padding:8px 16px;display:flex;align-items:center;justify-content:center;gap:12px;border-bottom:1px solid #555;flex-shrink:0}
+  #pdfjs-toolbar button{padding:8px 16px;border:none;border-radius:6px;font:600 12px ${S.bodyFont};cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .2s}
+  #pdfjs-toolbar button:hover{opacity:.85}
+  .pdfjs-nav{background:#555;color:white;font-size:18px;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;padding:0}
+  .pdfjs-info{color:rgba(255,255,255,.6);font:400 12px ${S.bodyFont};min-width:80px;text-align:center}
+  .pdfjs-close{position:absolute;right:12px;background:#555;color:white;border-radius:50%;width:36px;height:36px;font-size:18px;display:flex;align-items:center;justify-content:center}
+  .pdfjs-zoom{background:#555;color:white}
+  .pdfjs-dl{background:#c8864a;color:white}
+  .pdfjs-print{background:white;color:#333}
+  #pdfjs-canvas-container{flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:20px;gap:12px}
+  #pdfjs-canvas-container canvas{box-shadow:0 4px 20px rgba(0,0,0,.4);background:white}
+  .pdfjs-loading{color:rgba(255,255,255,.5);font:400 14px ${S.bodyFont};text-align:center;padding:40px}
 
-  /* Static cover overlay — displayed like a closed book */
-  #fb-static-cover{position:absolute;z-index:10;cursor:pointer;border-radius:4px;box-shadow:8px 4px 30px rgba(0,0,0,.5);transition:transform .6s ease, opacity .4s ease;transform-origin:left center}
-  #fb-static-cover.opening{transform:perspective(1200px) rotateY(-85deg);opacity:0}
-  #fb-static-cover img{display:block;width:100%;height:100%;border-radius:4px}
-  .fb-toolbar{position:fixed;bottom:0;left:0;right:0;background:rgba(20,20,20,.95);backdrop-filter:blur(10px);padding:12px 20px;display:flex;align-items:center;justify-content:center;gap:12px;z-index:1001;border-top:1px solid rgba(255,255,255,.1)}
-  .fb-btn{padding:10px 20px;border:none;border-radius:8px;font:600 13px ${S.bodyFont};cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
-  .fb-btn:hover{opacity:.85;transform:translateY(-1px)}
-  .fb-nav{background:rgba(255,255,255,.1);color:white;font-size:20px;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;padding:0}
-  .fb-nav:hover{background:rgba(255,255,255,.2)}
-  .fb-close{position:fixed;top:16px;right:16px;background:rgba(255,255,255,.1);color:white;border:none;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;z-index:1002;display:flex;align-items:center;justify-content:center}
-  .fb-close:hover{background:rgba(255,255,255,.2)}
-  .fb-title{position:fixed;top:16px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.6);font:500 14px ${S.bodyFont};letter-spacing:2px;z-index:1002}
-  .fb-page-info{color:rgba(255,255,255,.5);font:400 12px ${S.bodyFont};min-width:80px;text-align:center}
-  .fb-loading{color:rgba(255,255,255,.4);font:400 14px ${S.bodyFont};text-align:center}
-
-  @media print{.toolbar,.fb-toolbar,#flipbook-overlay,.fb-close,.fb-title{display:none!important}body{background:white}.pb-page{margin:0;box-shadow:none;page-break-after:always}}
+  @media print{.toolbar,#pdfjs-overlay{display:none!important}body{background:white}.pb-page{margin:0;box-shadow:none;page-break-after:always}}
 </style></head><body>
 
 ${pages}
 
 <!-- Normal toolbar -->
 <div class="toolbar" id="normal-toolbar">
-  <button class="btn-flip" onclick="openFlipbook()">&#128214; Feuilleter</button>
+  <button class="btn-flip" onclick="openViewer()">&#128214; Visionneuse</button>
   <button class="btn-print" onclick="window.print()">&#128424; Imprimer</button>
-  <button class="btn-pdf" onclick="savePdf()">&#128196; Convertir en PDF</button>
+  <button class="btn-pdf" onclick="savePdf()">&#128196; Télécharger PDF</button>
 </div>
 
-<!-- Flipbook overlay (hidden by default) -->
-<div id="flipbook-overlay">
-  <div class="fb-title">TravelBook — ${v.name}</div>
-  <button class="fb-close" onclick="closeFlipbook()" title="Fermer">&times;</button>
-  <div id="flipbook-container">
-    <div id="fb-static-cover" onclick="openBook()"></div>
+<!-- PDF.js Viewer overlay -->
+<div id="pdfjs-overlay">
+  <div id="pdfjs-toolbar">
+    <button class="pdfjs-nav" onclick="pdfPrevPage()">&#8249;</button>
+    <span class="pdfjs-info" id="pdfjs-info">— / —</span>
+    <button class="pdfjs-nav" onclick="pdfNextPage()">&#8250;</button>
+    <span style="width:1px;height:24px;background:#555"></span>
+    <button class="pdfjs-zoom" onclick="pdfZoom(-0.25)">&#8722;</button>
+    <span class="pdfjs-info" id="pdfjs-zoom-info">100%</span>
+    <button class="pdfjs-zoom" onclick="pdfZoom(0.25)">&#43;</button>
+    <button class="pdfjs-zoom" onclick="pdfFitWidth()">Ajuster</button>
+    <span style="width:1px;height:24px;background:#555"></span>
+    <button class="pdfjs-print" onclick="window.print()">&#128424; Imprimer</button>
+    <button class="pdfjs-dl" onclick="pdfDownload()">&#128196; Télécharger</button>
+    <button class="pdfjs-close" onclick="closeViewer()">&times;</button>
   </div>
-  <div class="fb-loading" id="fb-loading">Chargement du livre...</div>
-  <div class="fb-toolbar" id="fb-toolbar" style="display:none">
-    <button class="fb-btn fb-nav" onclick="flipbook.flipPrev()">&#8249;</button>
-    <span class="fb-page-info" id="fb-page-info">— / —</span>
-    <button class="fb-btn fb-nav" onclick="flipbook.flipNext()">&#8250;</button>
-    <span style="width:1px;height:28px;background:rgba(255,255,255,.15)"></span>
-    <button class="fb-btn" style="background:rgba(255,255,255,.1);color:white" onclick="toggleFullscreen()">&#x26F6; Plein écran</button>
-    <button class="fb-btn" style="background:white;color:#1a1a1a" onclick="closeFlipbook();window.print()">&#128424; Imprimer</button>
-    <button class="fb-btn" style="background:#c8864a;color:white" onclick="savePdfFromFlip()">&#128196; PDF</button>
+  <div id="pdfjs-canvas-container">
+    <div class="pdfjs-loading" id="pdfjs-loading">Génération du PDF...</div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"><\/script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
-<script>
-let flipbook = null;
-const pageImages = [];
-let flipbookReady = false;
+<script type="module">
+import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs';
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
 
-// Normal PDF save (from scroll view)
-async function savePdf() {
-  const btn = document.querySelector('.btn-pdf');
-  btn.textContent = 'Conversion...'; btn.disabled = true;
-  document.getElementById('normal-toolbar').style.display = 'none';
+let pdfDoc = null, pdfBlob = null, currentScale = 1.5, currentPage = 1;
+
+// Generate PDF blob from HTML pages
+async function generatePdfBlob() {
   const allPages = document.querySelectorAll('.pb-page');
   const {jsPDF} = window.jspdf;
   const pdf = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   const W = pdf.internal.pageSize.getWidth(), H = pdf.internal.pageSize.getHeight();
+  const loading = document.getElementById('pdfjs-loading');
   for (let i = 0; i < allPages.length; i++) {
+    if (loading) loading.textContent = 'Rendu page ' + (i+1) + '/' + allPages.length + '...';
     if (i > 0) pdf.addPage();
     try {
       const c = await html2canvas(allPages[i], {scale:2, useCORS:true, allowTaint:true, width:allPages[i].offsetWidth, height:allPages[i].offsetHeight});
       pdf.addImage(c.toDataURL('image/jpeg',.85), 'JPEG', 0, 0, W, H);
     } catch(e) { console.warn('Page '+i+' skip:', e); }
   }
-  pdf.save('TravelBook-${v.name.replace(/[^a-zA-Z0-9]/g, '')}.pdf');
-  document.getElementById('normal-toolbar').style.display = 'flex';
-  btn.textContent = 'Convertir en PDF'; btn.disabled = false;
+  return pdf.output('blob');
 }
 
-// PDF save from flipbook (uses cached images)
-async function savePdfFromFlip() {
-  if (!pageImages.length) return;
-  const {jsPDF} = window.jspdf;
-  const pdf = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const W = pdf.internal.pageSize.getWidth(), H = pdf.internal.pageSize.getHeight();
-  for (let i = 0; i < pageImages.length; i++) {
-    if (i > 0) pdf.addPage();
-    pdf.addImage(pageImages[i], 'JPEG', 0, 0, W, H);
+// Render a single page to canvas
+async function renderPage(num) {
+  const page = await pdfDoc.getPage(num);
+  const viewport = page.getViewport({scale: currentScale});
+  const canvas = document.createElement('canvas');
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  canvas.dataset.page = num;
+  await page.render({canvasContext: canvas.getContext('2d'), viewport}).promise;
+  return canvas;
+}
+
+// Render all pages
+async function renderAllPages() {
+  const container = document.getElementById('pdfjs-canvas-container');
+  container.innerHTML = '';
+  for (let i = 1; i <= pdfDoc.numPages; i++) {
+    const canvas = await renderPage(i);
+    container.appendChild(canvas);
   }
-  pdf.save('TravelBook-${v.name.replace(/[^a-zA-Z0-9]/g, '')}.pdf');
+  document.getElementById('pdfjs-info').textContent = pdfDoc.numPages + ' pages';
+  document.getElementById('pdfjs-zoom-info').textContent = Math.round(currentScale * 66.7) + '%';
 }
 
-// Open flipbook overlay
-async function openFlipbook() {
-  const overlay = document.getElementById('flipbook-overlay');
-  overlay.classList.add('active');
+// Open viewer
+window.openViewer = async function() {
+  document.getElementById('pdfjs-overlay').classList.add('active');
   document.getElementById('normal-toolbar').style.display = 'none';
+  if (pdfDoc) { renderAllPages(); return; }
+  pdfBlob = await generatePdfBlob();
+  const arrayBuf = await pdfBlob.arrayBuffer();
+  pdfDoc = await pdfjsLib.getDocument({data: arrayBuf}).promise;
+  renderAllPages();
+};
 
-  if (flipbookReady) {
-    document.getElementById('fb-toolbar').style.display = 'flex';
-    return;
-  }
-
-  const sourcePages = document.querySelectorAll('.pb-page');
-  const container = document.getElementById('flipbook-container');
-  const loading = document.getElementById('fb-loading');
-
-  for (let i = 0; i < sourcePages.length; i++) {
-    loading.textContent = 'Rendu page ' + (i + 1) + '/' + sourcePages.length + '...';
-    try {
-      const canvas = await html2canvas(sourcePages[i], {
-        scale: 1.5, useCORS: true, allowTaint: true,
-        width: sourcePages[i].offsetWidth, height: sourcePages[i].offsetHeight
-      });
-      pageImages.push(canvas.toDataURL('image/jpeg', 0.88));
-    } catch(e) {
-      const c = document.createElement('canvas'); c.width = 595; c.height = 842;
-      const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0,0,595,842);
-      pageImages.push(c.toDataURL('image/jpeg', 0.88));
-    }
-  }
-
-  loading.style.display = 'none';
-
-  // A4 portrait ratio: 210/297 = 0.7071
-  const maxH = window.innerHeight - 110;
-  const maxSpreadW = window.innerWidth - 40;
-  // Each page is half the spread; spread = 2 pages side by side
-  let pageH = maxH;
-  let pageW = Math.round(pageH * 0.7071);
-  // Ensure spread (2 pages) fits in viewport width
-  if (pageW * 2 > maxSpreadW) {
-    pageW = Math.round(maxSpreadW / 2);
-    pageH = Math.round(pageW / 0.7071);
-  }
-
-  // Use showCover:false — all pages in pairs. Cover is page 0 (LEFT of first spread)
-  // We'll overlay a static cover image on top for the "closed book" effect
-  flipbook = new St.PageFlip(container, {
-    width: pageW, height: pageH, size: 'fixed',
-    minWidth: 200, maxWidth: 600, minHeight: 280, maxHeight: 850,
-    showCover: false, maxShadowOpacity: 0.5, mobileScrollSupport: false,
-    flippingTime: 800, useMouseEvents: true, swipeDistance: 30, drawShadow: true, autoSize: true
-  });
-
-  // Skip cover image (index 0) in flipbook — it goes on the static overlay
-  flipbook.loadFromImages(pageImages.slice(1));
-
-  // Place static cover image on top of the flipbook
-  const staticCover = document.getElementById('fb-static-cover');
-  staticCover.innerHTML = '<img src="' + pageImages[0] + '" alt="Cover">';
-  staticCover.style.width = pageW + 'px';
-  staticCover.style.height = pageH + 'px';
-  // Position it on the LEFT side of the flipbook (where page 0 would be)
-  const stfParent = container.querySelector('.stf__parent');
-  if (stfParent) {
-    const rect = stfParent.getBoundingClientRect();
-    const contRect = container.getBoundingClientRect();
-    staticCover.style.top = (rect.top - contRect.top) + 'px';
-    staticCover.style.left = (rect.left - contRect.left) + 'px';
-  } else {
-    staticCover.style.top = '0';
-    staticCover.style.left = '0';
-  }
-  bookOpen = false;
-
-  flipbook.on('flip', (e) => {
-    const pg = e.data;
-    const total = flipbook.getPageCount();
-    document.getElementById('fb-page-info').textContent = (pg + 2) + ' / ' + (total + 1);
-  });
-  document.getElementById('fb-page-info').textContent = '1 / ' + (flipbook.getPageCount() + 1);
-  document.getElementById('fb-toolbar').style.display = 'flex';
-  flipbookReady = true;
-}
-
-let bookOpen = false;
-function openBook() {
-  const staticCover = document.getElementById('fb-static-cover');
-  staticCover.classList.add('opening');
-  bookOpen = true;
-  setTimeout(() => { staticCover.style.display = 'none'; }, 600);
-}
-
-function closeFlipbook() {
-  document.getElementById('flipbook-overlay').classList.remove('active');
+// Close viewer
+window.closeViewer = function() {
+  document.getElementById('pdfjs-overlay').classList.remove('active');
   document.getElementById('normal-toolbar').style.display = 'flex';
-}
+};
 
-function toggleFullscreen() {
-  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-  else document.exitFullscreen();
-}
+// Zoom
+window.pdfZoom = function(delta) {
+  currentScale = Math.max(0.5, Math.min(4, currentScale + delta));
+  renderAllPages();
+};
+window.pdfFitWidth = function() {
+  const containerW = document.getElementById('pdfjs-canvas-container').clientWidth - 40;
+  // A4 at 72dpi = 595px
+  currentScale = containerW / 595;
+  renderAllPages();
+};
 
+// Page nav (scroll to page)
+window.pdfPrevPage = function() {
+  const container = document.getElementById('pdfjs-canvas-container');
+  const canvases = container.querySelectorAll('canvas');
+  // Find current visible
+  let cur = 0;
+  for (let i = 0; i < canvases.length; i++) {
+    const rect = canvases[i].getBoundingClientRect();
+    if (rect.top >= 0) { cur = i; break; }
+  }
+  const prev = Math.max(0, cur - 1);
+  canvases[prev]?.scrollIntoView({behavior:'smooth', block:'start'});
+};
+window.pdfNextPage = function() {
+  const container = document.getElementById('pdfjs-canvas-container');
+  const canvases = container.querySelectorAll('canvas');
+  let cur = 0;
+  for (let i = 0; i < canvases.length; i++) {
+    const rect = canvases[i].getBoundingClientRect();
+    if (rect.top >= 0) { cur = i; break; }
+  }
+  const next = Math.min(canvases.length - 1, cur + 1);
+  canvases[next]?.scrollIntoView({behavior:'smooth', block:'start'});
+};
+
+// Download PDF
+window.pdfDownload = function() {
+  if (!pdfBlob) return;
+  const url = URL.createObjectURL(pdfBlob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'TravelBook-${v.name.replace(/[^a-zA-Z0-9]/g, '')}.pdf';
+  a.click(); URL.revokeObjectURL(url);
+};
+
+// Save PDF (from normal toolbar)
+window.savePdf = async function() {
+  const btn = document.querySelector('.btn-pdf');
+  btn.textContent = 'Génération...'; btn.disabled = true;
+  if (!pdfBlob) pdfBlob = await generatePdfBlob();
+  const url = URL.createObjectURL(pdfBlob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'TravelBook-${v.name.replace(/[^a-zA-Z0-9]/g, '')}.pdf';
+  a.click(); URL.revokeObjectURL(url);
+  btn.textContent = 'Télécharger PDF'; btn.disabled = false;
+};
+
+// Keyboard nav
 document.addEventListener('keydown', (e) => {
-  if (!document.getElementById('flipbook-overlay').classList.contains('active')) return;
-  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); flipbook.flipNext(); }
-  if (e.key === 'ArrowLeft') { e.preventDefault(); flipbook.flipPrev(); }
-  if (e.key === 'Escape') closeFlipbook();
-  if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+  if (!document.getElementById('pdfjs-overlay').classList.contains('active')) return;
+  if (e.key === 'Escape') window.closeViewer();
+  if (e.key === '+' || e.key === '=') { e.preventDefault(); window.pdfZoom(0.25); }
+  if (e.key === '-') { e.preventDefault(); window.pdfZoom(-0.25); }
 });
 <\/script>
 </body></html>`;
