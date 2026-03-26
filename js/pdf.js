@@ -87,6 +87,20 @@ const TEMPLATE_STYLES = {
   }
 };
 
+// === Country-specific Google Fonts for cover titles ===
+const COUNTRY_FONTS = {
+  'Japon': { font: 'Caveat Brush', gf: 'Caveat+Brush' },
+  'Égypte': { font: 'Aref Ruqaa', gf: 'Aref+Ruqaa:wght@400;700' },
+  'Portugal': { font: 'Quattrocento', gf: 'Quattrocento:wght@400;700' },
+  'France': { font: 'Parisienne', gf: 'Parisienne' },
+  'Italie': { font: 'Bodoni Moda', gf: 'Bodoni+Moda:wght@400;700' },
+  'Maroc': { font: 'Tajawal', gf: 'Tajawal:wght@400;700' },
+  'Grèce': { font: 'GFS Neohellenic', gf: 'GFS+Neohellenic:wght@400;700' },
+  'Thaïlande': { font: 'Bai Jamjuree', gf: 'Bai+Jamjuree:wght@400;600' },
+  'Inde': { font: 'Tiro Devanagari Hindi', gf: 'Tiro+Devanagari+Hindi' },
+  'Mexique': { font: 'Chango', gf: 'Chango' },
+};
+
 // === PHOTO BOOK TRAVEL — Dedicated template generator ===
 function generatePhotoBookHtml(v, tpl, S) {
   const C = S.colors;
@@ -95,10 +109,29 @@ function generatePhotoBookHtml(v, tpl, S) {
   const quotes = QUOTES[v.country] || [{text:"Le voyage est la seule chose qu'on achète qui nous rend plus riche.",attr:"Anonyme"}];
   const gSel = (ch) => ch.photos ? ch.photos.filter(p => p.on) : [];
 
+  // Country font
+  const cfEntry = COUNTRY_FONTS[v.country] || { font: 'Dancing Script', gf: 'Dancing+Script:wght@400;600;700' };
+  const countryFont = `'${cfEntry.font}',cursive`;
+  const extraFontParam = `&family=${cfEntry.gf}`;
+
   // Build cover info
   const participants = ['Raph', ...(v.companions || [])].join(', ');
   const datesParts = (v.dates || '').match(/(\d[\w.]*)\s*[-–]\s*(\d[\w.\s]*\d{4})/);
   const coverDateLine = datesParts ? 'du ' + datesParts[1] + ' au ' + datesParts[2] : v.dates || '';
+
+  // === HELPER FUNCTIONS ===
+  const foodCardHtml = (food) => {
+    if (!food) return '';
+    return `<div class="pb-card"><div class="pb-card-label">🍽️ Spécialité locale</div><div class="pb-card-title">${food.name}</div><div class="pb-card-desc">${food.desc}</div></div>`;
+  };
+  const placeCardHtml = (place) => {
+    if (!place) return '';
+    return `<div class="pb-card"><div class="pb-card-label">📍 Lieu visité</div><div class="pb-card-title">${place.name}</div><div class="pb-card-desc">${place.address} · ${place.duration}</div><div class="pb-card-stars">${'★'.repeat(Math.round(place.rating))}${'☆'.repeat(5 - Math.round(place.rating))} <span>${place.rating}</span></div></div>`;
+  };
+  const facesHtml = (faces) => {
+    if (!faces || !faces.length) return '';
+    return `<div class="pb-faces">${faces.map(f => { const c = COMPANIONS[f]; return c ? `<div class="pb-face ${c.gender==='F'?'f':''}">${c.name[0]}</div>` : ''; }).join('')}</div>`;
+  };
 
   let pages = '';
   let pgCount = 0; // track page count for spread alignment
@@ -110,7 +143,7 @@ function generatePhotoBookHtml(v, tpl, S) {
   // Ensure next page will be on RIGHT side of spread
   const alignRight = () => { if (pgCount % 2 === 1) addBlank(); };
 
-  // ===== PAGE 0: COVER (alone on right with showCover) =====
+  // ===== PAGE 0: COVER =====
   addPage(`
   <div class="pb-page pb-cover">
     <div class="pb-cover-inner">
@@ -118,10 +151,11 @@ function generatePhotoBookHtml(v, tpl, S) {
         <span class="pb-arrow">›››› </span>
         <span class="pb-header-label">TRAVELBOOK</span>
       </div>
-      <div class="pb-cover-title">Séjour ${v.country || v.name}</div>
+      <div class="pb-cover-title" style="font-family:${countryFont}">Séjour ${v.country || v.name}</div>
+      <div class="pb-accent-line" style="margin:0 auto 14px"></div>
       <div class="pb-cover-photo">
         <img src="${v.cover}" alt="">
-        <div class="pb-cover-script">${v.name}</div>
+        <div class="pb-cover-script" style="font-family:${countryFont}">${v.name}</div>
       </div>
       <div class="pb-cover-dates">${coverDateLine}</div>
       <div class="pb-cover-participants">${participants}</div>
@@ -140,8 +174,15 @@ function generatePhotoBookHtml(v, tpl, S) {
     <div class="pb-page pb-divider">
       <div class="pb-divider-bg" ${allPhotos[0] ? `style="background-image:url(${allPhotos[0]})"` : ''}></div>
       <div class="pb-divider-overlay"></div>
-      <div class="pb-divider-frame">
-        <div class="pb-divider-title">${ch.title.toUpperCase()}</div>
+      <div class="pb-divider-content">
+        <div class="pb-divider-num">${String(i + 1).padStart(2, '0')}</div>
+        <div class="pb-divider-frame"><div class="pb-divider-inner">
+          <div class="pb-divider-title">${ch.title.toUpperCase()}</div>
+          <div class="pb-divider-subtitle">${ch.place.name}</div>
+          <div class="pb-divider-day">${ch.day}</div>
+        </div></div>
+        ${ch.food ? `<div class="pb-divider-food">🍽️ ${ch.food.name}</div>` : ''}
+        <div class="pb-dots"><span></span><span></span><span></span></div>
       </div>
     </div>`);
 
@@ -167,58 +208,68 @@ function generatePhotoBookHtml(v, tpl, S) {
       }
       addPage(`
       <div class="pb-page pb-grid-page">
+        <div class="pb-bandeau"></div>
+        <div class="pb-running-header"><span>TravelBook — ${v.name}</span><span>${v.country}</span></div>
         <div class="pb-grid-photos">${gridHtml}</div>
-        <div class="pb-grid-text">
-          <h2 class="pb-section-title">${ch.title.toUpperCase()}</h2>
-          <p class="pb-body">${ch.text}</p>
-          <div class="pb-pin">📍</div>
+        <div class="pb-grid-content">
+          <div class="pb-grid-title-row"><div class="pb-accent-line"></div><h2 class="pb-section-title">${ch.title.toUpperCase()}</h2></div>
+          <p class="pb-body">${splitAtSentence(ch.text, 0)}</p>
+          <div class="pb-grid-footer">
+            ${foodCardHtml(ch.food)}
+            <div class="pb-grid-footer-right">${facesHtml(ch.faces)}<span class="pb-grid-place">📍 ${ch.place.name} · ${ch.place.duration}</span></div>
+          </div>
         </div>
+        <div class="pb-page-num">${pgCount}</div>
       </div>`);
     }
 
-    // --- DESIGNED SPREAD: left page (hero + title + thumbs) + right page (text + photos) ---
+    // --- DESIGNED SPREAD: left page (hero + title + thumbs) + right page (text + cards + photos) ---
     if (allPhotos.length >= 2) {
-      alignLeft(); // ensure spread lands on correct pair
+      alignLeft();
       const histSnippet = ch.history ? ch.history.summary.split(/(?<=[.!?])\s+/).slice(0, 2).join(' ') : '';
       const thumbs = allPhotos.slice(1, 4);
       const rightPhotos = allPhotos.slice(4, 7);
 
-      // LEFT PAGE: hero photo top + title + thumbnail strip bottom
+      // LEFT PAGE
       addPage(`
       <div class="pb-page pb-dspread-left">
+        <div class="pb-bandeau"></div>
         <div class="pb-dspread-hero">
           <img src="${allPhotos[0]}" alt="">
+          <div class="pb-dspread-hero-badge">${String(i + 1).padStart(2, '0')}</div>
         </div>
         <div class="pb-dspread-left-bottom">
           <div class="pb-dspread-title-row">
             <span class="pb-dspread-dot"></span>
             <h2 class="pb-dspread-title">${ch.title.toUpperCase()}</h2>
           </div>
-          <div class="pb-dspread-thumbs">
-            ${thumbs.map(u => `<img src="${u}" alt="">`).join('')}
-          </div>
+          <div class="pb-accent-line" style="margin-bottom:8px"></div>
+          <div class="pb-dspread-thumbs">${thumbs.map(u => `<img src="${u}" alt="">`).join('')}</div>
         </div>
+        <div class="pb-page-num">${pgCount}</div>
       </div>`);
 
-      // RIGHT PAGE: small photo top + text + larger photos bottom
+      // RIGHT PAGE
       addPage(`
       <div class="pb-page pb-dspread-right">
+        <div class="pb-bandeau"></div>
+        <div class="pb-running-header"><span>TravelBook — ${v.name}</span><span>${ch.day}</span></div>
         <div class="pb-dspread-right-top">
           ${rightPhotos[0] ? `<img src="${rightPhotos[0]}" class="pb-dspread-accent-img" alt="">` : ''}
-          <div class="pb-dspread-day">${ch.day}</div>
+          <div class="pb-dspread-meta"><div class="pb-dspread-day">${ch.day}</div>${facesHtml(ch.faces)}</div>
         </div>
         <div class="pb-dspread-text">
           <p>${ch.text}</p>
           ${histSnippet ? `<p class="pb-dspread-history">${histSnippet}</p>` : ''}
         </div>
+        <div class="pb-dspread-cards">${placeCardHtml(ch.place)}${foodCardHtml(ch.food)}</div>
         <div class="pb-dspread-quote">
+          <div class="pb-dspread-qmark">"</div>
           <p>"${q.text}"</p>
           <span>— ${q.attr}</span>
         </div>
-        <div class="pb-dspread-right-photos">
-          ${rightPhotos.slice(1, 3).map(u => `<img src="${u}" alt="">`).join('')}
-        </div>
-        <div class="pb-dspread-place">📍 ${ch.place.name} · ${ch.place.duration} · ${'★'.repeat(Math.round(ch.place.rating))}</div>
+        <div class="pb-dspread-right-photos">${rightPhotos.slice(1, 3).map(u => `<img src="${u}" alt="">`).join('')}</div>
+        <div class="pb-page-num">${pgCount}</div>
       </div>`);
     }
 
@@ -231,14 +282,42 @@ function generatePhotoBookHtml(v, tpl, S) {
           <div class="pb-split-photo-frame"></div>
         </div>
         <div class="pb-split-text">
-          <div class="pb-split-dots">
-            <span class="pb-dot-big"></span>
-            <span class="pb-dot-small"></span>
-          </div>
+          <div class="pb-split-dots"><span class="pb-dot-big"></span><span class="pb-dot-small"></span></div>
           <h2 class="pb-split-title">${ch.title.toUpperCase()}</h2>
-          <p class="pb-split-body">${ch.text}</p>
-          ${ch.history ? `<div class="pb-history"><div class="pb-history-label">Histoire</div><p>${ch.history.summary}</p></div>` : ''}
+          <div class="pb-accent-line" style="margin-bottom:10px"></div>
+          <p class="pb-split-body">${splitAtSentence(ch.text, 0)}</p>
+          ${ch.history ? `<div class="pb-history"><div class="pb-history-label">📜 Histoire</div><p>${ch.history.summary}</p></div>` : ''}
+          <div class="pb-split-footer">
+            ${foodCardHtml(ch.food)}
+            <div class="pb-split-meta">${facesHtml(ch.faces)}${placeCardHtml(ch.place)}</div>
+          </div>
         </div>
+        <div class="pb-page-num">${pgCount}</div>
+      </div>`);
+    }
+
+    // --- Food & Culture page ---
+    if (ch.food) {
+      addPage(`
+      <div class="pb-page pb-food-page">
+        <div class="pb-food-hero">
+          <div class="pb-food-hero-bg" ${allPhotos[0] ? `style="background-image:url(${allPhotos[0]})"` : ''}></div>
+          <div class="pb-food-hero-ov"></div>
+          <div class="pb-food-hero-content">
+            <div class="pb-food-icon">🍽️</div>
+            <h2 class="pb-food-name">${ch.food.name}</h2>
+            <div class="pb-accent-line" style="margin:8px auto;background:rgba(255,255,255,.5)"></div>
+            <p class="pb-food-loc">📍 ${ch.place.name} · ${ch.day}</p>
+          </div>
+        </div>
+        <div class="pb-food-body">
+          <div class="pb-card" style="margin:0;border-left:3px solid ${C.accent}">
+            <div class="pb-card-label">Spécialité culinaire</div>
+            <p class="pb-food-desc">${ch.food.desc}</p>
+          </div>
+          <div class="pb-food-footer">${facesHtml(ch.faces)}<span class="pb-food-footer-text">Dégusté à ${ch.place.name}</span></div>
+        </div>
+        <div class="pb-page-num">${pgCount}</div>
       </div>`);
     }
 
@@ -248,26 +327,35 @@ function generatePhotoBookHtml(v, tpl, S) {
       <div class="pb-page pb-quote-page">
         ${allPhotos[allPhotos.length - 1] ? `<img src="${allPhotos[allPhotos.length - 1]}" class="pb-quote-bg">` : ''}
         <div class="pb-quote-overlay"></div>
-        <div class="pb-quote-content">
-          <div class="pb-quote-mark">"</div>
-          <p class="pb-quote-text">${q.text}</p>
-          <span class="pb-quote-attr">— ${q.attr}</span>
+        <div class="pb-quote-frame">
+          <div class="pb-quote-content">
+            <div class="pb-quote-open">\u201C</div>
+            <p class="pb-quote-text">${q.text}</p>
+            <div class="pb-quote-close">\u201D</div>
+            <div class="pb-quote-rule"></div>
+            <span class="pb-quote-attr">— ${q.attr}</span>
+          </div>
         </div>
       </div>`);
     }
   });
 
-  // ===== ROUTE / STATS — as a pair (left: route, right: stats) =====
-  alignLeft(); // route on LEFT
+  // ===== ROUTE / STATS =====
+  alignLeft();
   addPage(`
   <div class="pb-page pb-stats-page">
+    <div class="pb-bandeau"></div>
     <div class="pb-stats-left">
       <h2 class="pb-section-title">ITINÉRAIRE</h2>
+      <div class="pb-accent-line" style="margin-bottom:10px"></div>
       <div class="pb-route">
         <div class="pb-route-item"><div class="pb-route-dot pb-route-start"></div><span>Départ</span></div>
         ${v.chapters.map((ch, idx) => `
           <div class="pb-route-line"></div>
-          <div class="pb-route-item"><div class="pb-route-dot ${idx === v.chapters.length - 1 ? 'pb-route-end' : ''}"></div><div><strong>${ch.place.name}</strong><br><small>${ch.day} · ${ch.place.duration}</small></div></div>
+          <div class="pb-route-item">
+            <div class="pb-route-dot ${idx === v.chapters.length - 1 ? 'pb-route-end' : ''}"></div>
+            <div><strong>${ch.place.name}</strong><br><small>${ch.day} · ${ch.place.duration}</small>${ch.food ? `<small class="pb-route-food">🍽️ ${ch.food.name}</small>` : ''}</div>
+          </div>
         `).join('')}
         <div class="pb-route-line"></div>
         <div class="pb-route-item"><div class="pb-route-dot pb-route-start"></div><span>Retour</span></div>
@@ -275,17 +363,19 @@ function generatePhotoBookHtml(v, tpl, S) {
     </div>
     <div class="pb-stats-right">
       <h2 class="pb-section-title">RÉSUMÉ</h2>
+      <div class="pb-accent-line" style="margin-bottom:10px"></div>
       <div class="pb-stats-grid">
-        <div class="pb-stat"><span class="pb-stat-num">${v.stats.photos}</span><span class="pb-stat-label">Photos</span></div>
-        <div class="pb-stat"><span class="pb-stat-num">${v.stats.lieux}</span><span class="pb-stat-label">Lieux</span></div>
-        <div class="pb-stat"><span class="pb-stat-num">${v.stats.mots.toLocaleString()}</span><span class="pb-stat-label">Mots</span></div>
-        <div class="pb-stat"><span class="pb-stat-num">${v.stats.temp}</span><span class="pb-stat-label">Temp.</span></div>
+        <div class="pb-stat"><span class="pb-stat-icon">📷</span><span class="pb-stat-num">${v.stats.photos}</span><span class="pb-stat-label">Photos</span></div>
+        <div class="pb-stat"><span class="pb-stat-icon">📍</span><span class="pb-stat-num">${v.stats.lieux}</span><span class="pb-stat-label">Lieux</span></div>
+        <div class="pb-stat"><span class="pb-stat-icon">✍️</span><span class="pb-stat-num">${v.stats.mots.toLocaleString()}</span><span class="pb-stat-label">Mots</span></div>
+        <div class="pb-stat"><span class="pb-stat-icon">🌡️</span><span class="pb-stat-num">${v.stats.temp}</span><span class="pb-stat-label">Temp.</span></div>
       </div>
       <div class="pb-companions">
-        <h4>Voyageurs</h4>
-        ${['raph', ...(v.companions || []).map(c => c.toLowerCase())].map(f => { const comp = COMPANIONS[f]; return comp ? `<div class="pb-comp"><div class="pb-comp-av ${comp.gender === 'F' ? 'f' : ''}">${comp.name[0]}</div><span>${comp.name} — ${comp.role}</span></div>` : ''; }).join('')}
+        <h4>👥 Voyageurs</h4>
+        ${['raph', ...(v.companions || []).map(c => c.toLowerCase())].map(f => { const comp = COMPANIONS[f]; return comp ? `<div class="pb-comp"><div class="pb-comp-av ${comp.gender === 'F' ? 'f' : ''}">${comp.name[0]}</div><div><strong>${comp.name}</strong><br><small>${comp.role}</small></div></div>` : ''; }).join('')}
       </div>
     </div>
+    <div class="pb-page-num">${pgCount}</div>
   </div>`);
 
   // Pad to ensure back cover lands on last page (alone on left)
@@ -297,6 +387,8 @@ function generatePhotoBookHtml(v, tpl, S) {
   <div class="pb-page pb-back">
     <div class="pb-back-content">
       <img src="${v.cover}" class="pb-back-photo" alt="">
+      <div class="pb-back-title">${v.name}</div>
+      <div class="pb-back-summary">${v.chapters.length} chapitres · ${v.stats.photos} photos · ${v.stats.lieux} lieux</div>
       <div class="pb-back-line">
         <span class="pb-back-rule"></span>
         <div class="pb-back-icons">📘 ✈️ 🌍</div>
@@ -309,7 +401,7 @@ function generatePhotoBookHtml(v, tpl, S) {
   // ===== FULL HTML =====
   return `<!DOCTYPE html><html><head><meta charset="UTF-8">
 <title>TravelBook — ${v.name}</title>
-<link href="https://fonts.googleapis.com/css2?family=${S.fonts}&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=${S.fonts}${extraFontParam}&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 <style>
@@ -320,13 +412,31 @@ function generatePhotoBookHtml(v, tpl, S) {
   .pb-page{width:210mm;height:297mm;overflow:hidden;page-break-after:always;position:relative;margin:0 auto 4px;background:${C.bg}}
   .pb-blank{background:${C.bg2}}
 
+  /* ===== GLOBAL DESIGN SYSTEM ===== */
+  .pb-bandeau{position:absolute;top:0;left:0;right:0;height:5mm;background:${C.accent};z-index:2}
+  .pb-running-header{position:absolute;top:8mm;left:10mm;right:10mm;display:flex;justify-content:space-between;font:400 7px ${S.bodyFont};color:${C.muted};letter-spacing:2px;text-transform:uppercase;z-index:5}
+  .pb-page-num{position:absolute;bottom:8mm;right:10mm;font:500 8px ${S.bodyFont};color:${C.muted}}
+  .pb-accent-line{width:40px;height:3px;background:${C.accent};border-radius:2px}
+  .pb-card{background:${C.card || C.bg2};border:1px solid ${C.border};border-radius:8px;padding:10px 12px;margin:6px 0}
+  .pb-card-label{font:600 7.5px ${S.bodyFont};color:${C.accent};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px}
+  .pb-card-title{font:600 12px ${serifFont};color:${C.ink};margin-bottom:3px}
+  .pb-card-desc{font:400 9px ${S.bodyFont};color:${C.muted};line-height:1.5}
+  .pb-card-stars{font-size:10px;color:#c8a050;margin-top:3px}
+  .pb-card-stars span{font:500 9px ${S.bodyFont};color:${C.muted};margin-left:4px}
+  .pb-faces{display:flex}
+  .pb-face{width:26px;height:26px;border-radius:50%;background:${C.accent};color:white;font:700 10px ${S.bodyFont};display:flex;align-items:center;justify-content:center;border:2px solid ${C.bg};margin-left:-6px}
+  .pb-face:first-child{margin-left:0}
+  .pb-face.f{background:${C.muted}}
+  .pb-dots{display:flex;justify-content:center;gap:6px;margin:10px 0}
+  .pb-dots span{width:5px;height:5px;border-radius:50%;background:${C.accent};opacity:.3}
+
   /* ===== COVER ===== */
   .pb-cover{display:flex;align-items:center;justify-content:center}
   .pb-cover-inner{width:100%;height:100%;padding:18mm;display:flex;flex-direction:column;align-items:center}
   .pb-cover-header{display:flex;align-items:center;gap:6px;align-self:flex-end;margin-bottom:8px}
   .pb-arrow{font:700 12px ${S.bodyFont};color:${C.accent};letter-spacing:-2px}
   .pb-header-label{font:500 9px ${S.bodyFont};color:${C.muted};letter-spacing:3px;text-transform:uppercase}
-  .pb-cover-title{font:700 36px ${scriptFont};color:${C.accent};margin:12px 0 16px;text-align:center;line-height:1.3}
+  .pb-cover-title{font-weight:700;font-size:40px;color:${C.accent};margin:12px 0 8px;text-align:center;line-height:1.3}
   .pb-cover-photo{position:relative;width:100%;flex:1;overflow:hidden;border-radius:2px;box-shadow:0 8px 40px rgba(0,0,0,.15)}
   .pb-cover-photo img{width:100%;height:100%;object-fit:cover}
   .pb-cover-script{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font:700 64px ${scriptFont};color:white;text-shadow:0 4px 30px rgba(0,0,0,.5);white-space:nowrap}
@@ -337,72 +447,103 @@ function generatePhotoBookHtml(v, tpl, S) {
   .pb-divider{display:flex;align-items:center;justify-content:center}
   .pb-divider-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:brightness(.2) blur(2px)}
   .pb-divider-overlay{position:absolute;inset:0;background:rgba(20,20,20,.85)}
-  .pb-divider-frame{position:relative;border:2px solid rgba(255,255,255,.6);padding:40px 55px;text-align:center}
-  .pb-divider-title{font:700 32px ${S.bodyFont};color:white;letter-spacing:6px;text-transform:uppercase;line-height:1.4}
+  .pb-divider-content{position:relative;z-index:2;text-align:center;padding:20mm}
+  .pb-divider-num{font:300 72px ${S.bodyFont};color:rgba(255,255,255,.12);letter-spacing:8px;margin-bottom:16px}
+  .pb-divider-frame{border:2px solid rgba(255,255,255,.5);padding:8px;display:inline-block}
+  .pb-divider-inner{border:1px solid rgba(255,255,255,.25);padding:28px 44px}
+  .pb-divider-title{font:700 28px ${S.bodyFont};color:white;letter-spacing:6px;text-transform:uppercase;line-height:1.3}
+  .pb-divider-subtitle{font:400 12px ${S.bodyFont};color:rgba(255,255,255,.55);letter-spacing:3px;margin-top:8px}
+  .pb-divider-day{font:italic 400 13px ${serifFont};color:rgba(255,255,255,.35);margin-top:6px}
+  .pb-divider-food{font:400 10px ${S.bodyFont};color:rgba(255,255,255,.35);margin-top:18px;letter-spacing:1px}
 
   /* ===== PHOTO GRID PAGE ===== */
-  .pb-grid-page{display:flex;flex-direction:column;padding:10mm}
-  .pb-grid-photos{flex:1;display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
+  .pb-grid-page{display:flex;flex-direction:column;padding:10mm;padding-top:14mm}
+  .pb-grid-photos{flex:0 0 55%;display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
   .pb-grid-row{display:grid;gap:4px;flex:1}
   .pb-grid-3{grid-template-columns:1fr 1fr 1fr}
   .pb-grid-2{grid-template-columns:1fr 1fr}
   .pb-grid-row img{width:100%;height:100%;object-fit:cover;border-radius:2px}
-  .pb-grid-text{padding:0 5mm}
-  .pb-section-title{font:800 28px ${S.bodyFont};color:${C.accent};letter-spacing:2px;margin-bottom:10px}
-  .pb-body{font:400 11px ${S.bodyFont};color:${C.ink};line-height:1.8}
+  .pb-grid-content{flex:1;padding:0 2mm;display:flex;flex-direction:column}
+  .pb-grid-title-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .pb-section-title{font:800 22px ${S.bodyFont};color:${C.accent};letter-spacing:2px;margin:0}
+  .pb-body{font:400 10px ${S.bodyFont};color:${C.ink};line-height:1.75}
+  .pb-grid-footer{margin-top:auto;display:flex;gap:10px;align-items:flex-end}
+  .pb-grid-footer .pb-card{flex:1;margin:0}
+  .pb-grid-footer-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+  .pb-grid-place{font:500 8px ${S.bodyFont};color:${C.muted}}
   .pb-pin{font-size:18px;margin-top:10px;opacity:.6}
 
   /* ===== DESIGNED SPREAD ===== */
-  /* Left page: hero photo (70%) + title bar + thumbnails strip */
-  .pb-dspread-left{display:grid;grid-template-rows:1fr auto auto;overflow:hidden}
-  .pb-dspread-hero{overflow:hidden;min-height:0}
+  .pb-dspread-left{display:grid;grid-template-rows:1fr auto;overflow:hidden}
+  .pb-dspread-hero{overflow:hidden;min-height:0;position:relative}
   .pb-dspread-hero img{width:100%;height:100%;object-fit:cover;display:block}
+  .pb-dspread-hero-badge{position:absolute;top:14px;left:14px;font:700 20px ${S.bodyFont};color:white;background:${C.accent};width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.3)}
   .pb-dspread-left-bottom{padding:8mm 8mm 6mm;background:${C.bg}}
-  .pb-dspread-title-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .pb-dspread-title-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
   .pb-dspread-dot{width:14px;height:14px;border-radius:50%;background:${C.accent};flex-shrink:0}
-  .pb-dspread-title{font:800 20px ${S.bodyFont};color:${C.accent};letter-spacing:2px;line-height:1.2;margin:0}
+  .pb-dspread-title{font:800 18px ${S.bodyFont};color:${C.accent};letter-spacing:2px;line-height:1.2;margin:0}
   .pb-dspread-thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
   .pb-dspread-thumbs img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:3px}
 
-  /* Right page: accent photo top + text + quote + photos bottom */
-  .pb-dspread-right{display:grid;grid-template-rows:auto 1fr auto auto;padding:8mm 10mm;gap:0}
-  .pb-dspread-right-top{display:flex;gap:10px;margin-bottom:10px}
-  .pb-dspread-accent-img{width:55%;aspect-ratio:16/9;object-fit:cover;border-radius:4px}
-  .pb-dspread-day{font:600 10px ${S.bodyFont};color:${C.muted};letter-spacing:3px;text-transform:uppercase;padding-top:4px;align-self:flex-start}
-  .pb-dspread-text{overflow:hidden}
-  .pb-dspread-text p{font:400 10px ${S.bodyFont};color:${C.ink};line-height:1.7;margin-bottom:6px}
-  .pb-dspread-history{font:italic 400 9.5px ${serifFont};color:${C.muted};line-height:1.55}
-  .pb-dspread-quote{border-left:3px solid ${C.accent};padding:8px 14px;margin:8px 0;background:${C.quote || 'rgba(0,0,0,.02)'};border-radius:0 6px 6px 0}
-  .pb-dspread-quote p{font:italic 400 11px ${serifFont};color:${C.accent};line-height:1.5;margin:0}
-  .pb-dspread-quote span{font:400 9px ${S.bodyFont};color:${C.muted};display:block;margin-top:4px;text-align:right}
+  .pb-dspread-right{display:flex;flex-direction:column;padding:14mm 10mm 8mm;gap:0}
+  .pb-dspread-right-top{display:flex;gap:10px;margin-bottom:8px}
+  .pb-dspread-accent-img{width:50%;aspect-ratio:16/9;object-fit:cover;border-radius:4px}
+  .pb-dspread-meta{display:flex;flex-direction:column;gap:8px}
+  .pb-dspread-day{font:600 9px ${S.bodyFont};color:${C.muted};letter-spacing:3px;text-transform:uppercase}
+  .pb-dspread-text{flex:1;overflow:hidden}
+  .pb-dspread-text p{font:400 9.5px ${S.bodyFont};color:${C.ink};line-height:1.7;margin-bottom:5px}
+  .pb-dspread-history{font:italic 400 9px ${serifFont};color:${C.muted};line-height:1.5}
+  .pb-dspread-cards{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0}
+  .pb-dspread-cards .pb-card{margin:0}
+  .pb-dspread-quote{border-left:3px solid ${C.accent};padding:6px 12px;margin:6px 0;background:${C.quote || 'rgba(0,0,0,.02)'};border-radius:0 6px 6px 0;position:relative}
+  .pb-dspread-qmark{font:700 36px ${serifFont};color:${C.accent};opacity:.2;position:absolute;top:-4px;left:8px;line-height:1}
+  .pb-dspread-quote p{font:italic 400 10px ${serifFont};color:${C.accent};line-height:1.5;margin:0;padding-left:20px}
+  .pb-dspread-quote span{font:400 8px ${S.bodyFont};color:${C.muted};display:block;margin-top:3px;text-align:right}
   .pb-dspread-right-photos{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:auto}
   .pb-dspread-right-photos img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:4px}
-  .pb-dspread-place{font:500 9px ${S.bodyFont};color:${C.muted};letter-spacing:1px;margin-top:6px}
-  .pb-icon-loc{margin-right:4px}
 
   /* ===== SPLIT LAYOUT ===== */
   .pb-split{display:grid;grid-template-columns:1fr 1fr;height:297mm}
   .pb-split-photo{position:relative;overflow:hidden}
   .pb-split-photo img{width:100%;height:100%;object-fit:cover}
   .pb-split-photo-frame{position:absolute;inset:10mm;border:2px solid ${C.accent}}
-  .pb-split-text{padding:16mm 12mm;display:flex;flex-direction:column;justify-content:center}
-  .pb-split-dots{margin-bottom:16px}
+  .pb-split-text{padding:14mm 10mm;display:flex;flex-direction:column}
+  .pb-split-dots{margin-bottom:12px}
   .pb-dot-big{display:inline-block;width:12px;height:12px;border-radius:50%;background:${C.accent};margin-right:4px}
   .pb-dot-small{display:inline-block;width:7px;height:7px;border-radius:50%;background:${C.muted}}
-  .pb-split-title{font:700 26px ${serifFont};color:${C.accent};line-height:1.2;margin-bottom:16px}
-  .pb-split-body{font:400 11px ${S.bodyFont};color:#444;line-height:1.85}
-  .pb-history{margin-top:16px;padding:12px;background:${C.bg2};border-radius:6px}
-  .pb-history .pb-history-label{font:600 9px ${S.bodyFont};color:${C.accent};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
-  .pb-history p{font:400 10px ${S.bodyFont};color:${C.muted};line-height:1.6;margin:0}
+  .pb-split-title{font:700 22px ${serifFont};color:${C.accent};line-height:1.2;margin-bottom:6px}
+  .pb-split-body{font:400 10px ${S.bodyFont};color:#444;line-height:1.75}
+  .pb-history{margin-top:10px;padding:10px;background:${C.bg2};border-radius:6px;border-left:3px solid ${C.accent}}
+  .pb-history .pb-history-label{font:600 8px ${S.bodyFont};color:${C.accent};text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+  .pb-history p{font:400 9px ${S.bodyFont};color:${C.muted};line-height:1.55;margin:0}
+  .pb-split-footer{margin-top:auto}
+  .pb-split-meta{display:flex;align-items:center;gap:8px;margin-top:6px}
+
+  /* ===== FOOD PAGE ===== */
+  .pb-food-page{display:flex;flex-direction:column}
+  .pb-food-hero{flex:0 0 50%;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .pb-food-hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:brightness(.3) blur(3px)}
+  .pb-food-hero-ov{position:absolute;inset:0;background:linear-gradient(135deg,${C.accent}cc,${C.dark || '#1a1a1a'}dd)}
+  .pb-food-hero-content{position:relative;z-index:2;text-align:center;color:white;padding:16mm}
+  .pb-food-icon{font-size:44px;margin-bottom:12px}
+  .pb-food-name{font:700 30px ${serifFont};color:white;letter-spacing:2px}
+  .pb-food-loc{font:400 11px ${S.bodyFont};color:rgba(255,255,255,.55);margin-top:8px}
+  .pb-food-body{flex:1;padding:10mm 14mm;display:flex;flex-direction:column;justify-content:center}
+  .pb-food-desc{font:400 12px ${S.bodyFont};color:${C.ink};line-height:1.8}
+  .pb-food-footer{display:flex;align-items:center;gap:10px;margin-top:14px;font:400 10px ${S.bodyFont};color:${C.muted}}
+  .pb-food-footer-text{font:italic 400 10px ${serifFont};color:${C.muted}}
 
   /* ===== QUOTE PAGE ===== */
   .pb-quote-page{display:flex;align-items:center;justify-content:center}
   .pb-quote-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .pb-quote-overlay{position:absolute;inset:0;background:rgba(0,0,0,.6)}
-  .pb-quote-content{position:relative;text-align:center;padding:30mm;max-width:80%}
-  .pb-quote-mark{font:700 80px ${serifFont};color:rgba(255,255,255,.3);line-height:1}
-  .pb-quote-text{font:italic 400 22px ${serifFont};color:white;line-height:1.6;margin:10px 0 16px}
-  .pb-quote-attr{font:400 11px ${S.bodyFont};color:rgba(255,255,255,.6);letter-spacing:2px}
+  .pb-quote-frame{position:relative;z-index:2;border:1px solid rgba(255,255,255,.2);margin:30mm;padding:20mm;display:flex;align-items:center;justify-content:center}
+  .pb-quote-content{text-align:center;max-width:90%}
+  .pb-quote-open,.pb-quote-close{font:700 100px ${serifFont};color:rgba(255,255,255,.12);line-height:.5}
+  .pb-quote-close{text-align:right}
+  .pb-quote-text{font:italic 400 20px ${serifFont};color:white;line-height:1.6;margin:16px 0}
+  .pb-quote-rule{width:40px;height:2px;background:rgba(255,255,255,.3);margin:14px auto}
+  .pb-quote-attr{font:400 11px ${S.bodyFont};color:rgba(255,255,255,.5);letter-spacing:2px}
 
   /* ===== STATS PAGE ===== */
   .pb-stats-page{display:grid;grid-template-columns:1fr 1fr;height:297mm}
@@ -417,9 +558,11 @@ function generatePhotoBookHtml(v, tpl, S) {
   .pb-route-end{background:${C.accent2}}
   .pb-route-line{width:2px;height:14px;background:${C.accent};margin-left:4px;opacity:.3}
   .pb-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
-  .pb-stat{text-align:center;padding:14px;background:${C.bg2};border-radius:8px}
-  .pb-stat-num{font:800 28px ${S.bodyFont};color:${C.accent};display:block}
-  .pb-stat-label{font:400 9px ${S.bodyFont};color:${C.muted};text-transform:uppercase;letter-spacing:1px}
+  .pb-stat{text-align:left;padding:12px;background:${C.bg2};border-radius:8px;border-left:3px solid ${C.accent}}
+  .pb-stat-icon{font-size:16px;display:block;margin-bottom:3px}
+  .pb-stat-num{font:800 24px ${S.bodyFont};color:${C.accent};display:block}
+  .pb-stat-label{font:400 8px ${S.bodyFont};color:${C.muted};text-transform:uppercase;letter-spacing:1px}
+  .pb-route-food{display:block;color:${C.accent};font-style:italic;font-size:8px}
   .pb-companions{margin-top:20px}
   .pb-companions h4{font:600 10px ${S.bodyFont};color:${C.accent};text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
   .pb-comp{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid ${C.border};font:400 11px ${S.bodyFont}}
@@ -429,7 +572,9 @@ function generatePhotoBookHtml(v, tpl, S) {
   /* ===== BACK COVER ===== */
   .pb-back{background:${C.dark};display:flex;align-items:center;justify-content:center}
   .pb-back-content{text-align:center;padding:30mm}
-  .pb-back-photo{width:160px;height:110px;object-fit:cover;border-radius:4px;box-shadow:0 8px 30px rgba(0,0,0,.4);margin-bottom:24px}
+  .pb-back-photo{width:160px;height:110px;object-fit:cover;border-radius:4px;box-shadow:0 8px 30px rgba(0,0,0,.4);margin-bottom:16px}
+  .pb-back-title{font:700 22px ${serifFont};color:rgba(255,255,255,.65);margin-bottom:4px}
+  .pb-back-summary{font:400 10px ${S.bodyFont};color:rgba(255,255,255,.3);letter-spacing:1px;margin-bottom:14px}
   .pb-back-line{display:flex;align-items:center;gap:14px;margin:14px 0}
   .pb-back-rule{flex:1;height:1px;background:rgba(255,255,255,.25)}
   .pb-back-icons{font-size:16px;letter-spacing:8px}
