@@ -669,7 +669,7 @@ async function extractPages(blob) {
   const imgs = [];
   for (let i = 1; i <= doc.numPages; i++) {
     const page = await doc.getPage(i);
-    const vp = page.getViewport({scale: 2});
+    const vp = page.getViewport({scale: 1.2});
     const canvas = document.createElement('canvas');
     canvas.width = vp.width; canvas.height = vp.height;
     await page.render({canvasContext: canvas.getContext('2d'), viewport: vp}).promise;
@@ -700,11 +700,14 @@ window.openFlipbook = async function() {
 
   // Step 3: Create flipbook with StPageFlip
   const container = document.getElementById('flip-container');
-  const maxH = window.innerHeight - 80;
-  const maxW = window.innerWidth - 40;
+  // Size: fit comfortably in viewport (max 65% height, spread must fit width)
+  const maxH = Math.round((window.innerHeight - 100) * 0.65);
+  const maxW = window.innerWidth - 80;
   let pH = maxH;
   let pW = Math.round(pH * 0.7071);
   if (pW * 2 > maxW) { pW = Math.round(maxW / 2); pH = Math.round(pW / 0.7071); }
+  // Min size guard
+  if (pH < 300) { pH = 300; pW = Math.round(pH * 0.7071); }
 
   fb = new St.PageFlip(container, {
     width: pW, height: pH, size: 'fixed',
