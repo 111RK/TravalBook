@@ -57,18 +57,58 @@ function navTo(id) {
 // =============================================
 // Auth
 // =============================================
+let demoMode = false;
+
 function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value.trim();
+  if (!email || !pass) { showToast('Veuillez remplir tous les champs'); return; }
   localStorage.setItem('tb-logged', '1');
+  localStorage.setItem('tb-user', email.split('@')[0]);
+  demoMode = false;
   showToast('Connexion réussie');
-  setTimeout(() => navigateTo('screen-home'), 400);
+  setTimeout(() => { updateHome(); navigateTo('screen-home'); }, 400);
 }
+
 function doSignup() {
+  const first = document.getElementById('signup-first')?.value.trim();
+  const last = document.getElementById('signup-last')?.value.trim();
+  const email = document.getElementById('signup-email')?.value.trim();
+  const pass = document.getElementById('signup-pass')?.value.trim();
+  // If fields exist and are empty → validate
+  if (first !== undefined && (!first || !last || !email || !pass)) {
+    showToast('Veuillez remplir tous les champs'); return;
+  }
   localStorage.setItem('tb-logged', '1');
-  showToast('Compte créé');
-  setTimeout(() => navigateTo('screen-home'), 400);
+  if (first) {
+    localStorage.setItem('tb-user', first);
+    demoMode = false;
+  } else {
+    demoMode = true;
+  }
+  showToast(demoMode ? 'Mode démonstration' : 'Compte créé');
+  setTimeout(() => { updateHome(); navigateTo('screen-home'); }, 400);
 }
+
+function demoLogin() {
+  localStorage.setItem('tb-logged', '1');
+  demoMode = true;
+  showToast('Mode démonstration');
+  setTimeout(() => { updateHome(); navigateTo('screen-home'); }, 400);
+}
+
+function updateHome() {
+  const user = localStorage.getItem('tb-user') || 'Raph';
+  document.querySelector('.home-hi').textContent = 'Bonjour, ' + user;
+  const banner = document.querySelector('.demo-banner');
+  if (banner) banner.style.display = demoMode ? 'block' : 'none';
+  renderTrips();
+}
+
 function logout() {
   localStorage.removeItem('tb-logged');
+  localStorage.removeItem('tb-user');
+  demoMode = false;
   navigateTo('screen-splash');
   hist = ['screen-splash'];
 }
@@ -77,7 +117,12 @@ function logout() {
 // Home — Trip List
 // =============================================
 function renderTrips() {
-  document.getElementById('trip-list').innerHTML = VOYAGES.map(v => {
+  const trips = demoMode ? VOYAGES : [];
+  if (!trips.length) {
+    document.getElementById('trip-list').innerHTML = '<div style="text-align:center;padding:40px 20px;color:#999"><p style="font-size:40px;margin-bottom:12px">✈️</p><p style="font-size:14px;font-weight:600;color:#666">Aucun voyage</p><p style="font-size:12px;margin-top:4px">Créez votre premier voyage pour commencer</p></div>';
+    return;
+  }
+  document.getElementById('trip-list').innerHTML = trips.map(v => {
     const selPhotos = v.chapters[0]?.photos?.filter(p => p.on)?.slice(0, 3) || [];
     return `
     <div class="trip-card" onclick="openVoyage(${v.id})">
