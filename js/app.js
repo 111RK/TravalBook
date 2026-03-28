@@ -79,9 +79,12 @@ function doSignup() {
   if (first !== undefined && (!first || !last || !email || !pass)) {
     showToast('Veuillez remplir tous les champs'); return;
   }
+  const zip = document.getElementById('signup-zip')?.value.trim() || '';
+  const city = document.getElementById('signup-city')?.value.trim() || '';
   localStorage.setItem('tb-logged', '1');
   if (first) {
     localStorage.setItem('tb-user', first);
+    if (city) localStorage.setItem('tb-city', city + (zip ? ', France' : ''));
     demoMode = false;
   } else {
     demoMode = true;
@@ -98,11 +101,37 @@ function demoLogin() {
 }
 
 function updateHome() {
-  const user = localStorage.getItem('tb-user') || 'Raph';
+  const user = localStorage.getItem('tb-user') || (demoMode ? 'Voyageur' : '?');
   document.querySelector('.home-hi').textContent = 'Bonjour, ' + user;
+  const avatar = document.getElementById('home-avatar');
+  if (avatar) avatar.textContent = user[0].toUpperCase();
   const banner = document.querySelector('.demo-banner');
   if (banner) banner.style.display = demoMode ? 'block' : 'none';
   renderTrips();
+  updateProfile();
+}
+
+function updateProfile() {
+  const user = localStorage.getItem('tb-user') || (demoMode ? 'Voyageur' : '?');
+  const city = localStorage.getItem('tb-city') || '';
+  const trips = demoMode ? VOYAGES : [];
+
+  document.getElementById('prof-avatar').textContent = user[0].toUpperCase();
+  document.getElementById('prof-name').textContent = user;
+  document.getElementById('prof-loc').textContent = city || (demoMode ? 'Toulouse, France' : '');
+  document.getElementById('kpi-voyages').textContent = trips.length;
+  document.getElementById('kpi-pays').textContent = [...new Set(trips.map(v => v.country))].length;
+  document.getElementById('kpi-carnets').textContent = trips.length;
+
+  const compSection = document.getElementById('prof-companions');
+  if (demoMode) {
+    const comps = Object.values(COMPANIONS);
+    compSection.innerHTML = '<h3>Compagnons</h3>' + comps.map(c =>
+      `<div class="prof-companion"><div class="comp-av">${c.name[0]}</div><div><strong>${c.name}</strong><br><small>${c.role}</small></div></div>`
+    ).join('');
+  } else {
+    compSection.innerHTML = '<h3>Compagnons</h3><p style="color:#999;font-size:12px;padding:12px 0">Aucun compagnon pour le moment</p>';
+  }
 }
 
 function logout() {

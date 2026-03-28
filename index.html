@@ -83,7 +83,7 @@
               <p class="home-hi">Bonjour, Raph</p>
               <h2 class="home-h">Mes voyages</h2>
             </div>
-            <div class="avatar" onclick="navigateTo('screen-profile')">R</div>
+            <div class="avatar" id="home-avatar" onclick="navigateTo('screen-profile')">?</div>
           </div>
           <div class="demo-banner">Exemples de voyages — Données de démonstration</div>
           <button class="btn-new-trip" onclick="navigateTo('screen-newtrip')">
@@ -297,20 +297,17 @@
       <div class="screen" id="screen-profile">
         <div class="screen-scroll">
           <div class="prof-head">
-            <div class="prof-avatar">R</div>
-            <h2 class="prof-name">Raph</h2>
-            <p class="prof-loc">Toulouse, France</p>
+            <div class="prof-avatar" id="prof-avatar">?</div>
+            <h2 class="prof-name" id="prof-name">—</h2>
+            <p class="prof-loc" id="prof-loc"></p>
           </div>
-          <div class="prof-kpis">
-            <div class="kpi"><span class="kpi-v">3</span><span class="kpi-l">Voyages</span></div>
-            <div class="kpi"><span class="kpi-v">3</span><span class="kpi-l">Pays</span></div>
-            <div class="kpi"><span class="kpi-v">3</span><span class="kpi-l">Carnets</span></div>
+          <div class="prof-kpis" id="prof-kpis">
+            <div class="kpi"><span class="kpi-v" id="kpi-voyages">0</span><span class="kpi-l">Voyages</span></div>
+            <div class="kpi"><span class="kpi-v" id="kpi-pays">0</span><span class="kpi-l">Pays</span></div>
+            <div class="kpi"><span class="kpi-v" id="kpi-carnets">0</span><span class="kpi-l">Carnets</span></div>
           </div>
-          <div class="prof-section">
+          <div class="prof-section" id="prof-companions">
             <h3>Compagnons</h3>
-            <div class="prof-companion"><div class="comp-av">M</div><div><strong>Marie</strong><br><small>Conjointe - 2 voyages</small></div></div>
-            <div class="prof-companion"><div class="comp-av">L</div><div><strong>Lucas</strong><br><small>Ami - 1 voyage</small></div></div>
-            <div class="prof-companion"><div class="comp-av">E</div><div><strong>Emma</strong><br><small>Amie - 1 voyage</small></div></div>
           </div>
           <div class="prof-section">
             <h3>Préférences</h3>
