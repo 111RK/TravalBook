@@ -772,9 +772,21 @@ function downloadPdf() {
   // Photo Book Travel uses its own dedicated generator
   if (tpl.id === 'portrait-photobook') {
     const html = generatePhotoBookHtml(v, tpl, S);
+    // Try window.open first, fallback to iframe overlay for Capacitor/mobile
     const w = window.open('', '_blank');
     if (w) { w.document.write(html); w.document.close(); }
-    else { showToast('Autorisez les pop-ups'); }
+    else {
+      let overlay = document.getElementById('pdf-iframe-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'pdf-iframe-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#000';
+        overlay.innerHTML = '<button onclick="this.parentElement.remove()" style="position:fixed;top:12px;right:12px;z-index:10000;background:rgba(255,255,255,.2);color:#fff;border:none;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer">&times;</button><iframe style="width:100%;height:100%;border:none"></iframe>';
+        document.body.appendChild(overlay);
+      }
+      const iframe = overlay.querySelector('iframe');
+      iframe.contentDocument.open(); iframe.contentDocument.write(html); iframe.contentDocument.close();
+    }
     return;
   }
 
@@ -1164,5 +1176,16 @@ async function savePdf() {
 
   const w = window.open('', '_blank');
   if (w) { w.document.write(html); w.document.close(); }
-  else { showToast('Autorisez les pop-ups'); }
+  else {
+    let overlay = document.getElementById('pdf-iframe-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'pdf-iframe-overlay';
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#000';
+      overlay.innerHTML = '<button onclick="this.parentElement.remove()" style="position:fixed;top:12px;right:12px;z-index:10000;background:rgba(255,255,255,.2);color:#fff;border:none;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer">&times;</button><iframe style="width:100%;height:100%;border:none"></iframe>';
+      document.body.appendChild(overlay);
+    }
+    const iframe = overlay.querySelector('iframe');
+    iframe.contentDocument.open(); iframe.contentDocument.write(html); iframe.contentDocument.close();
+  }
 }
